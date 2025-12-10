@@ -209,111 +209,139 @@
         margin-top: 5px;
         opacity: 0.8;
     }
+
+/* Mobile Responsiveness (Hamburguer Menu) */
+@media (max-width: 992px) {
     
-    /* REFINAMENTO: Estilos do Botão Menu Hambúrguer (Desktop) */
-    #menuToggle { 
-        display: none; /* Escondido por padrão no desktop */
-        padding: 6px 10px; 
-        font-size: 16px; 
-        margin-right: 10px;
-    }
+  /* ------------------------------------------- */
+  /* NOVO: AUMENTO GERAL PARA MOBILE USABILITY  */
+  /* ------------------------------------------- */
+  /* Torna os botões muito maiores e mais fáceis de tocar */
+  .btn, .btn.secondary {
+    padding: 14px 18px !important; /* Aumenta o padding */
+    font-size: 16px !important;     /* Aumenta a fonte */
+    min-height: 44px;               /* Garante o tamanho mínimo para toque (Padrão de usabilidade) */
+  }
 
+  /* Torna os inputs e selects mais altos */
+  .input, textarea, select {
+    padding: 14px !important; /* Aumenta o padding */
+    min-height: 44px;         /* Garante o tamanho mínimo para toque (Padrão de usabilidade) */
+    font-size: 16px;          /* Mantido em 16px para evitar zoom */
+  }
 
-    /* Mobile Responsiveness (Hamburguer Menu) */
-    @media (max-width: 992px) {
-      /* ... (Estilos Mobile Anteriores) ... */
-      header .left-controls { display: flex; align-items: center; }
-      #menuToggle { display: inline-block !important; } /* Exibe no mobile */
+  /* Aumenta o espaçamento dos itens de lista */
+  .material-item, .student-card {
+      padding: 16px 12px; /* Aumenta o padding vertical */
+  }
 
-      .grid { grid-template-columns: 1fr; } /* Layout de coluna única */
-      .container { padding: 0 12px; }
-      
-      /* Sidebar */
-      #sidebar {
-        position: fixed;
-        top: 50px; /* Abaixo do header */
-        left: 0;
-        width: 250px; /* Largura do menu */
-        height: calc(100vh - 50px);
-        z-index: 20;
-        padding: var(--pad);
-        transform: translateX(-100%); /* Inicialmente oculto fora da tela */
-        transition: transform 0.3s ease-in-out;
-        box-shadow: 4px 0 12px rgba(0,0,0,0.3);
-        background: var(--card); /* Fundo sólido */
-        margin: 0; /* Remove margem */
-        border-radius: 0; /* Remove cantos arredondados na lateral */
-        overflow-y: auto; /* Scroll dentro do menu, se necessário */
-      }
-      #sidebar.active {
-        transform: translateX(0);
-      }
-      #menu {
-        display: block; 
-        gap: 0;
-        padding: 0;
-      }
-      nav .nav-item {
-        flex: none;
-        text-align: left;
-        justify-content: flex-start;
-        padding: 12px 10px;
-        min-width: unset;
-      }
-      
-      /* Dashboard counters em coluna */
-      #dashboard .row { flex-direction: column; gap: 10px; }
-      #dashboard .row .card { width: 100%; }
+  /* Aumenta o tamanho dos itens do menu */
+  nav .nav-item {
+      padding: 15px 10px; 
+      font-size: 16px;
+  }
+  
+  /* ------------------------------------------- */
+  /* Estilos Mobile Anteriores (Mantidos e Ajustados) */
+  /* ------------------------------------------- */
+  header .left-controls { display: flex; align-items: center; }
+  #menuToggle { display: inline-block !important; margin-right: 10px; }
+  #menuToggle.btn.secondary { /* Força o botão de menu a seguir o novo estilo */
+    padding: 10px 14px !important; /* Um pouco menor, mas ainda bom para ícone */
+    min-height: 44px;
+    font-size: 18px !important;
+  }
 
-      /* Ajuste para botões e inputs em linhas */
-      /* MELHORIA MOBILE: Força o empilhamento vertical para formulários em linha */
-      .row:not(#dashboard .row) { 
-        flex-direction: column; 
-        flex-wrap: nowrap; /* Não quebra, apenas empilha */
-        gap: 8px; /* Ajusta o espaçamento */
-      }
-      .row .input, .row select, .row button { 
-        min-width: 100%; 
-        flex-grow: 1; 
-        width: 100% !important; /* Garante que os inputs ocupem a largura total */
-      }
-      /* FIM MELHORIA MOBILE */
+  .grid { grid-template-columns: 1fr; } /* Layout de coluna única */
+  .container { padding: 0 12px; }
+  
+  /* Sidebar */
+  #sidebar {
+    position: fixed;
+    top: 50px; 
+    left: 0;
+    width: 250px;
+    height: calc(100vh - 50px);
+    z-index: 20;
+    padding: var(--pad);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 4px 0 12px rgba(0,0,0,0.3);
+    background: var(--card);
+    margin: 0;
+    border-radius: 0;
+    overflow-y: auto;
+  }
+  #sidebar.active {
+    transform: translateX(0);
+  }
+  #menu {
+    display: block; 
+    gap: 0;
+    padding: 0;
+  }
+  nav .nav-item {
+    flex: none;
+    text-align: left;
+    justify-content: flex-start;
+    min-width: unset;
+  }
+  
+  /* Dashboard counters em coluna */
+  #dashboard .row { flex-direction: column; gap: 10px; }
+  #dashboard .row .card { width: 100%; }
 
-      
-      /* Turmas/Materiais em coluna */
-      #materials .row { flex-direction: column; gap: 15px; }
-      #materials .row > div { width: 100%; }
+  /* Ajuste para inputs em linhas (empilhamento vertical) */
+  .row:not(#dashboard .row) { 
+    flex-direction: column; 
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .row .input, .row select, .row button { 
+    min-width: 100%; 
+    flex-grow: 1; 
+    width: 100% !important;
+  }
 
-      /* QR Gallery ajuste */
-      #qrGallery { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important; }
-      
-      /* Alunos - botões em coluna */
-      .student-card > div:last-child {
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 4px;
-      }
-      .student-card button { padding: 6px 10px; font-size: 12px; }
+  /* Turmas/Materiais em coluna */
+  #materials .row { flex-direction: column; gap: 15px; }
+  #materials .row > div { width: 100%; }
 
-      /* Ajustes específicos para o modal de checklist em mobile */
-      .checklist-modal-box {
-          width: 95vw !important;
-          max-height: 95vh !important; 
-          padding: 0 !important; 
-      }
-      .checklist-item-details { max-width: 100%; }
-      .checklist-item-controls { justify-content: space-between; gap: 8px; width: 100%; }
-      .checklist-item { flex-direction: column; align-items: flex-start; gap: 8px; }
-      #checklist-list-area { padding: 12px; flex-shrink: 1; } /* Garantindo o flex-shrink para que os outros elementos fixos possam aparecer */
-      #signature-area { padding: 12px; flex-shrink: 0; }
-    }
+  /* QR Gallery ajuste */
+  #qrGallery { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important; }
+  
+  /* Alunos - botões em coluna */
+  .student-card > div:last-child {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  /* Botões menores no card do aluno */
+  .student-card button { 
+      padding: 10px 14px; 
+      font-size: 14px; 
+      min-height: 40px; 
+  }
+
+  /* Ajustes específicos para o modal de checklist em mobile */
+  .checklist-modal-box {
+      width: 95vw !important;
+      max-height: 95vh !important; 
+      padding: 0 !important; 
+  }
+  .checklist-item-details { max-width: 100%; }
+  .checklist-item-controls { justify-content: space-between; gap: 8px; width: 100%; }
+  .checklist-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+  #checklist-list-area { padding: 12px; flex-shrink: 1; }
+  #signature-area { padding: 12px; flex-shrink: 0; }
+}
   </style>
 </head>
 <body>
 
 <header>
   <div class="left-controls" style="display:flex; align-items:center;">
-    <button id="menuToggle" class="btn secondary">
+    <button id="menuToggle" class="btn secondary" style="display:none; padding: 6px 10px; font-size: 16px; margin-right: 10px;">
       ☰
     </button>
     <h1>Controle de Material Escolar</h1>
@@ -520,13 +548,6 @@ service cloud.firestore {
     </div>
 </footer>
 
-<div id="menuOverlay"></div>
-
-<div id="checklist-modal" style="display:none;">
-    <div class="checklist-modal-box">
-        </div>
-</div>
-
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -699,290 +720,240 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-
-if(auth){
-  auth.onAuthStateChanged(user => {
-    if(user){
-      $('userEmail').textContent = user.email;
-      $('btnLogout').style.display='';
-      $('loginPanel').style.display='none';
-      $('appContent').style.display='';
-      
-      // Carrega dados e mostra dashboard
-      initialLoad();
-
-    } else {
-      $('userEmail').textContent = '';
-      $('btnLogout').style.display='none';
-      $('loginPanel').style.display='';
-      $('appContent').style.display='none';
-      showTab('dashboard'); // Volta para a tela de login
-    }
-  });
-
-  $('btnLogout').addEventListener('click', async ()=>{
-    try{
-      await auth.signOut();
-    }catch(err){
-      alert('Erro ao sair: ' + err.message);
-    }
-  });
-}
-
+// Segmentos/Categorias
 const SEGMENTS_MAP = {
-    infantil: 'Ed. Infantil',
-    fund1: 'Fundamental I',
-    fund2: 'Fundamental II',
-    medio: 'Ensino Médio',
-    other: 'Outros'
+    'infantil': 'Ed. Infantil',
+    'fund1': 'Fund. I',
+    'fund2': 'Fund. II',
+    'medio': 'Ens. Médio',
+    'other': 'Outros'
 };
 
-async function initialLoad(){
-    try {
-        await Promise.all([
-            loadClassesSelects(), // Preenche os selects em todas as abas
-            loadClassesList(),    // Preenche a lista da aba Materiais
-            loadStudentsList(null), // Carrega todos os alunos
-            loadDashboardData(null)
-        ]);
-    } catch(e) {
-        console.warn('Erro durante o carregamento inicial de dados após login:', e);
-    }
-    
-    // --- FLUXO PARA SCANNER/CÂMERA ---
-    const params = new URLSearchParams(window.location.search);
-    const scannedStudentId = params.get('studentId');
-    const scannedMode = params.get('mode');
+/* ---------------------------
+   AUTH (Login / Logout)
+   --------------------------- */
 
-    if (scannedStudentId) {
-        // 1. Abre o documento para impressão (se for modo 'print') ou o modal de conferência (padrão/fallback).
-        if (scannedMode === 'print') {
-            generatePrintableChecklist(scannedStudentId);
+// Listener de estado de autenticação
+if(auth){
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            // Logado
+            $('userEmail').textContent = user.email;
+            $('btnLogout').style.display = 'inline-block';
+            $('loginPanel').style.display = 'none';
+            
+            const conferenteName = getCurrentClerkName(); // Pega do input/localStorage
+            if(conferenteName !== 'Conferente Desconhecido') {
+                localStorage.setItem('conferenteName', conferenteName); // Salva o nome após login
+            }
+            
+            try {
+                // Carrega dados iniciais em paralelo para melhor performance
+                await Promise.all([
+                    loadClassesSelects(), 
+                    loadDashboardData(),
+                    // Tenta carregar a lista de alunos para pré-preencher
+                    loadStudentsList($('studentsFilterClass') ? $('studentsFilterClass').value : null) 
+                ]);
+            } catch(e) {
+                console.warn('Erro durante o carregamento inicial de dados após login:', e);
+            }
+
+            // --- FLUXO PARA SCANNER/CÂMERA ---
+            const params = new URLSearchParams(window.location.search);
+            const scannedStudentId = params.get('studentId');
+            const scannedMode = params.get('mode');
+            
+            if (scannedStudentId) {
+                // 1. Abre o documento para impressão (se for modo 'print') ou o modal de conferência (padrão/fallback).
+                if (scannedMode === 'print') {
+                    generatePrintableChecklist(scannedStudentId);
+                } else {
+                    openStudent(scannedStudentId);
+                }
+                
+                // 2. Remove o parâmetro da barra de URL após a ação (evita loops)
+                if (typeof history.replaceState === 'function') {
+                    history.replaceState(null, '', window.location.pathname);
+                }
+            }
+            
+            showTab('dashboard');
+
         } else {
-            openStudent(scannedStudentId);
+            // Deslogado
+            $('userEmail').textContent = 'Visitante';
+            $('btnLogout').style.display = 'none';
+            $('loginPanel').style.display = '';
+            $('appContent').style.display = 'none';
+            showTab('loginPanel');
         }
-        
-        // 2. Remove o parâmetro da barra de URL após a ação (evita loops)
-        if (typeof history.replaceState === 'function') {
-            history.replaceState(null, '', window.location.pathname);
-        }
-    }
-
-    showTab('dashboard');
+    });
 }
 
 if(auth){
-  $('btnLogin').addEventListener('click', async ()=>{
-    const e = $('loginEmail').value.trim();
-    const p = $('loginPass').value;
-    const n = $('conferenteName').value.trim(); // Pega o nome do conferente
+    $('btnLogin').addEventListener('click', async ()=>{
+        const e = $('loginEmail').value.trim();
+        const p = $('loginPass').value;
+        const n = $('conferenteName').value.trim();
+        
+        if(!e || !p || !n){
+            $('loginMsg').textContent = 'Preencha Email, Senha e Nome do Conferente.';
+            return;
+        }
 
-    if (!n) {
-        $('loginMsg').textContent = 'Erro: Preencha o Nome Completo do Conferente.';
-        return;
-    }
-    localStorage.setItem('conferenteName', n); // Salva o nome no local storage
+        $('btnLogin').disabled = true;
+        $('btnLogin').textContent = 'Entrando...';
+        $('loginMsg').textContent = '';
+        
+        try{
+            // Tenta o login
+            await auth.signInWithEmailAndPassword(e, p); 
+            
+            // Se o login for bem-sucedido, salva o nome do conferente
+            localStorage.setItem('conferenteName', n);
 
-    try{
-      await auth.signInWithEmailAndPassword(e,p);
-      $('loginMsg').textContent='';
-    }catch(err){
-      $('loginMsg').textContent = err.message || 'Erro ao logar';
-    }
-  });
+            // A chamada onAuthStateChanged (acima) cuidará do resto da interface.
+        }catch(err){
+            $('loginMsg').textContent = 'Erro de login: ' + (err.message || err);
+            $('btnLogin').disabled = false;
+            $('btnLogin').textContent = 'Entrar';
+        }
+    });
 
-  $('btnSignup').addEventListener('click', async ()=>{
-    const e = $('loginEmail').value.trim();
-    const p = $('loginPass').value;
-    const n = $('conferenteName').value.trim(); // Pega o nome do conferente
+    $('btnSignup').addEventListener('click', async function(){
+        const e = $('loginEmail').value.trim();
+        const p = $('loginPass').value;
+        const n = $('conferenteName').value.trim();
+        
+        if(!e || !p || !n){
+            $('loginMsg').textContent = 'Preencha Email, Senha e Nome do Conferente para criar a conta de teste.';
+            return;
+        }
 
-    if (!n) {
-        $('loginMsg').textContent = 'Erro: Preencha o Nome Completo do Conferente.';
-        return;
-    }
-    localStorage.setItem('conferenteName', n); // Salva o nome no local storage
-    
-    try{
-      await auth.createUserWithEmailAndPassword(e,p);
-      $('loginMsg').textContent='Conta criada com sucesso! Faça login.';
-    }catch(err){
-      $('loginMsg').textContent = err.message || 'Erro ao criar conta';
-    }
-  });
+        this.disabled = true;
+        this.textContent = 'Criando...';
+        $('loginMsg').textContent = '';
+
+        try{
+            await auth.createUserWithEmailAndPassword(e, p);
+            localStorage.setItem('conferenteName', n);
+            alert('Conta criada com sucesso e login realizado! Lembre-se de ajustar as regras do Firestore (aba "Ajuda").');
+        }catch(err){
+            $('loginMsg').textContent = 'Erro ao criar conta: ' + (err.message || err);
+        }finally{
+            this.disabled = false;
+            this.textContent = 'Criar conta (teste)';
+        }
+    });
+
+    $('btnLogout').addEventListener('click', async ()=>{
+        if(auth.currentUser){
+            await auth.signOut();
+        }
+    });
 }
 
 /* ---------------------------
    DASHBOARD
    --------------------------- */
 
-/**
- * Verifica se um aluno tem todos os materiais entregues.
- * @param {string} studentId O ID do documento do aluno.
- * @returns {Promise<{studentId: string, classId: string, isComplete: boolean}>}
- */
-async function checkStudentFullDelivery(studentId) {
-    const studentDoc = await db.collection('students').doc(studentId).get();
-    if (!studentDoc.exists) return { studentId, classId: null, isComplete: false };
-    const s = studentDoc.data();
-    const classId = s.classId;
-
-    if (!classId) return { studentId, classId, isComplete: false };
-
-    // 1. Materiais Requeridos
-    const materialsSnap = await db.collection('materials').where('classId', '==', classId).get();
-    const materialsRequired = {};
-    materialsSnap.forEach(m => materialsRequired[m.id] = m.data().quantity || 1);
-
-    if (Object.keys(materialsRequired).length === 0) {
-        // Se a turma não tem materiais cadastrados, consideramos "completo" para fins de contagem
-        return { studentId, classId, isComplete: true };
-    }
-
-    // 2. Entregas Registradas
-    const deliveriesSnap = await db.collection('deliveries').where('studentId', '==', studentId).get();
-    const materialsDelivered = {};
-    deliveriesSnap.forEach(d => materialsDelivered[d.data().materialId] = d.data().quantityDelivered || 0);
-
-    // 3. Comparação
-    let isComplete = true;
-    for (const matId in materialsRequired) {
-        const required = materialsRequired[matId];
-        const delivered = materialsDelivered[matId] || 0;
-        if (delivered < required) {
-            isComplete = false;
-            break;
-        }
-    }
-
-    return { studentId, classId, isComplete };
-}
-
-
 async function loadDashboardData(){
-  if(!db) return;
-  try{
-    const [classesSnap, studentsSnap, materialsSnap] = await Promise.all([
-      db.collection('classes').get(),
-      db.collection('students').get(),
-      db.collection('materials').get(),
-    ]);
+    if(!db) return;
+    try{
+        const [classesSnap, studentsSnap, materialsSnap] = await Promise.all([
+            db.collection('classes').get(),
+            db.collection('students').get(),
+            db.collection('materials').get()
+        ]);
 
-    // 1. Contadores
-    const classesCount = classesSnap.size;
-    const studentsCount = studentsSnap.size;
-    const materialsCount = materialsSnap.size;
-
-    $('countClasses').textContent = classesCount;
-    $('countStudents').textContent = studentsCount;
-    $('countMaterials').textContent = materialsCount;
-
-    // 2. Status de Entrega por Segmento/Turma
-    const classesData = {};
-    classesSnap.forEach(doc => {
-        classesData[doc.id] = { ...doc.data(), id: doc.id, totalStudents: 0, fullDeliveryStudents: 0 };
-    });
-
-    const studentPromises = [];
-    studentsSnap.forEach(sDoc => {
-        const s = sDoc.data();
-        if (s.classId && classesData[s.classId]) {
-            classesData[s.classId].totalStudents++;
-            // Promessa para calcular se o aluno está completo
-            studentPromises.push(checkStudentFullDelivery(sDoc.id));
-        }
-    });
-    
-    const studentDeliveryStatus = await Promise.all(studentPromises);
-    studentDeliveryStatus.forEach(status => {
-        if (status.isComplete && classesData[status.classId]) {
-            classesData[status.classId].fullDeliveryStudents++;
-        }
-    });
-
-    // 3. Agrupamento por Segmento
-    const segmentsStatus = {};
-    Object.values(classesData).forEach(c => {
-        const segment = c.segment || 'other';
-        if (!segmentsStatus[segment]) {
-            segmentsStatus[segment] = { 
-                name: SEGMENTS_MAP[segment] || 'Outros', 
-                totalStudents: 0, 
-                fullDeliveryStudents: 0, 
-                classes: [] 
-            };
-        }
-        segmentsStatus[segment].totalStudents += c.totalStudents;
-        segmentsStatus[segment].fullDeliveryStudents += c.fullDeliveryStudents;
-        segmentsStatus[segment].classes.push(c);
-    });
-
-    const grid = $('classStatusGrid');
-    grid.innerHTML = '';
-    
-    const sortedSegments = Object.values(segmentsStatus).sort((a, b) => (a.name).localeCompare(b.name));
-
-    sortedSegments.forEach(seg => {
-        const segmentPercentage = seg.totalStudents > 0 ? Math.round((seg.fullDeliveryStudents / seg.totalStudents) * 100) : 0;
-        const segmentColor = segmentPercentage === 100 ? 'var(--success)' : 'var(--danger)';
+        $('countClasses').textContent = classesSnap.size;
+        $('countStudents').textContent = studentsSnap.size;
+        $('countMaterials').textContent = materialsSnap.size;
         
-        let segmentHtml = `
-            <div class="card group-card">
-                <div style="padding: 16px; border-bottom: 1px solid var(--border-color);">
-                    <div style="font-weight:700; font-size: 18px; color: ${segmentColor};">${seg.name}</div>
-                    <div class="small" style="margin-top: 4px;">${seg.fullDeliveryStudents} / ${seg.totalStudents} alunos com 100% dos materiais</div>
-                    <div style="font-size:24px; font-weight:700; color:${segmentColor}; margin-top: 8px;">${segmentPercentage}%</div>
-                </div>
-                <div style="padding: 16px; display:flex; flex-direction:column; gap:8px;">
-        `;
-
-        seg.classes.sort((a,b)=> (a.name).localeCompare(b.name)).forEach(c => {
-            const classPercentage = c.totalStudents > 0 ? Math.round((c.fullDeliveryStudents / c.totalStudents) * 100) : 0;
-            const classColor = classPercentage === 100 ? 'var(--success)' : (classPercentage > 0 ? 'var(--warning)' : 'var(--danger)');
-            
-            segmentHtml += `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding: 6px 0;">
-                    <div style="font-size:14px;">${c.name}</div>
-                    <div style="font-weight:600; color:${classColor};">${classPercentage}% (${c.fullDeliveryStudents}/${c.totalStudents})</div>
-                </div>
-            `;
+        // --- Status por Segmento ---
+        const classStats = {}; // { classId: { name, segment, totalStudents, deliveredCount } }
+        classesSnap.forEach(d => {
+            const data = d.data();
+            classStats[d.id] = { name: data.name, segment: data.segment, totalStudents: 0, deliveredCount: 0 };
         });
 
-        segmentHtml += `
-                </div>
-            </div>
-        `;
-        grid.innerHTML += segmentHtml;
-    });
+        studentsSnap.forEach(d => {
+            const s = d.data();
+            if (s.classId && classStats[s.classId]) {
+                classStats[s.classId].totalStudents++;
+                // Verifica se o aluno tem pelo menos uma assinatura para contar como 'Entregue'
+                if (s.signatureDataURL) {
+                    classStats[s.classId].deliveredCount++;
+                }
+            }
+        });
 
-    if(sortedSegments.length === 0) {
-        grid.innerHTML = '<div class="small" style="grid-column: 1 / -1;">Nenhuma turma encontrada. Cadastre uma turma na aba "Importar Lista".</div>';
-    } else {
-        // Redefine o layout da grid para 2 colunas no desktop (se mais de 2 segmentos)
-        if (sortedSegments.length >= 2) {
-             grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))';
+        // Agrupar por Segmento
+        const segmentStats = {}; // { segment: { totalClasses, totalStudents, totalDelivered } }
+        Object.values(classStats).forEach(c => {
+            const segment = c.segment || 'other';
+            if (!segmentStats[segment]) {
+                segmentStats[segment] = { totalClasses: 0, totalStudents: 0, totalDelivered: 0 };
+            }
+            segmentStats[segment].totalClasses++;
+            segmentStats[segment].totalStudents += c.totalStudents;
+            segmentStats[segment].totalDelivered += c.deliveredCount;
+        });
+        
+        const grid = $('classStatusGrid');
+        grid.style.gridTemplateColumns = `repeat(auto-fit, minmax(280px, 1fr))`;
+        let html = '';
+        
+        // Ordenar os segmentos (Infantil, Fund I, Fund II, Médio, Outros)
+        const orderedSegments = ['infantil', 'fund1', 'fund2', 'medio', 'other'];
+        
+        orderedSegments.forEach(key => {
+            const stats = segmentStats[key];
+            if (stats && stats.totalStudents > 0) {
+                const percentage = stats.totalDelivered / stats.totalStudents * 100 || 0;
+                const statusColor = percentage === 100 ? 'var(--success)' : (percentage > 50 ? 'var(--warning)' : 'var(--danger)');
+                const segmentName = SEGMENTS_MAP[key] || 'Outros';
+
+                html += `
+                    <div class="card" style="border-left: 5px solid ${statusColor};">
+                        <div class="small" style="font-weight: 600;">${segmentName} (${stats.totalClasses} Turmas)</div>
+                        <div style="font-size: 20px; font-weight: 700; margin-top: 4px;">
+                            ${stats.totalDelivered} / ${stats.totalStudents} Entregues
+                        </div>
+                        <div style="height: 6px; background: var(--bg); border-radius: 4px; margin-top: 8px;">
+                            <div style="width: ${percentage.toFixed(0)}%; height: 6px; background: ${statusColor}; border-radius: 4px;"></div>
+                        </div>
+                        <div class="small" style="text-align: right; margin-top: 4px; font-weight: 500; color: ${statusColor};">
+                            ${percentage.toFixed(0)}% de Conclusão
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        if (html === '') {
+            grid.innerHTML = '<div class="small" style="grid-column: 1 / -1;">Nenhuma turma ou aluno encontrado.</div>';
         } else {
-             grid.style.gridTemplateColumns = '1fr';
+            grid.innerHTML = html;
         }
+
+    }catch(err){
+        console.error('Erro dashboard', err);
     }
-
-
-  }catch(err){
-    console.error('Erro loadDashboardData', err);
-    $('classStatusGrid').innerHTML = '<div class="small" style="color:var(--danger)">Erro ao carregar dados do dashboard.</div>';
-  }
 }
 
-/* ---------------------------
-   IMPORTAR LISTA
-   --------------------------- */
 
-$('btnParseText').addEventListener('click', function(){
+/* ---------------------------
+   IMPORT MATERIALS (TAB)
+   --------------------------- */
+function parseMaterialText(){
     const text = $('materialText').value;
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l !== '');
-    
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+
     const materials = [];
     const materialRegex = /^(\d+)\s*x?\s*([^\d].*)/i; // Ex: 10 Lápis | 10x Lápis
-    
+
     lines.forEach(line => {
         const match = line.match(materialRegex);
         if (match) {
@@ -992,14 +963,15 @@ $('btnParseText').addEventListener('click', function(){
             if(name.length > 5 && quantity > 0) { // Filtro mínimo
                 materials.push({ name, quantity });
             }
-
         } else {
             // Tenta o caso onde a quantidade está no final (menos comum)
             const reverseRegex = /^(.*)\s+x?\s*(\d+)$/i;
             const reverseMatch = line.match(reverseRegex);
+            
             if (reverseMatch) {
                 let quantity = parseInt(reverseMatch[2].trim(), 10);
                 let name = reverseMatch[1].trim().replace(/[,.:]$/, '');
+                
                 if(name.length > 5 && quantity > 0) {
                     materials.push({ name, quantity });
                 }
@@ -1012,7 +984,7 @@ $('btnParseText').addEventListener('click', function(){
             }
         }
     });
-
+    
     // Filtra duplicatas e consolida quantidades
     const consolidated = materials.reduce((acc, item) => {
         const existing = acc.find(a => a.name.toLowerCase() === item.name.toLowerCase());
@@ -1024,7 +996,6 @@ $('btnParseText').addEventListener('click', function(){
         return acc;
     }, []);
 
-
     // Renderiza
     const list = $('parsedMaterials');
     if(consolidated.length === 0) {
@@ -1032,116 +1003,78 @@ $('btnParseText').addEventListener('click', function(){
         $('btnSaveMaterials').disabled = true;
         return;
     }
-
-    list.innerHTML = consolidated.map(m => 
-        `<div class="material-item">
+    
+    list.innerHTML = '';
+    
+    let html = consolidated.map(m => `
+        <div class="material-item">
             <div>
-                <strong>${m.name}</strong> 
-                <div class="small">Quantidade: ${m.quantity}</div>
+                <input type="number" value="${m.quantity}" class="input" style="width:60px; text-align:center; padding: 4px; height: auto;" min="1" onchange="updateParsedMaterial(this, '${m.name.replace(/'/g, "\\'")}')"/>
+                <span style="font-weight:600; margin-left: 10px;">${m.name}</span>
             </div>
-            <div style="display:flex;gap:6px">
-                <button class="btn secondary" style="padding: 6px 10px; font-size:12px;" onclick="editParsedMaterial(this, '${m.name.replace(/'/g, "\\'")}', ${m.quantity})">Editar</button>
-                <button class="btn secondary" style="background:var(--danger);color:white; padding: 6px 10px; font-size:12px;" onclick="removeParsedMaterial(this)">Remover</button>
-            </div>
-        </div>`
-    ).join('');
-
-    // Salva os dados consolidados no elemento para acesso posterior
-    list.dataset.materials = JSON.stringify(consolidated);
+            <button class="btn secondary" style="background:var(--danger);color:white; padding: 6px 10px; font-size:12px;" onclick="removeParsedMaterial(this)">Remover</button>
+        </div>
+    `).join('');
+    
+    list.innerHTML = `<div class="list">${html}</div>`;
     $('btnSaveMaterials').disabled = false;
+}
+$('btnParseText').addEventListener('click', parseMaterialText);
+$('btnClearParsed').addEventListener('click', ()=>{
+    $('materialText').value = '';
+    $('parsedMaterials').innerHTML = '<div class="small">Lista limpa.</div>';
+    $('btnSaveMaterials').disabled = true;
 });
 
-function editParsedMaterial(button, currentName, currentQuantity) {
-    const newQty = prompt(`Editar Quantidade Requerida de "${currentName}" (Atual: ${currentQuantity}):`);
-    if (newQty === null || isNaN(parseInt(newQty, 10)) || parseInt(newQty, 10) < 1) {
-        if (newQty !== null) alert('Quantidade inválida.');
-        return;
-    }
-    
-    const newQuantity = parseInt(newQty, 10);
-    const itemEl = button.closest('.material-item');
-    
-    // Atualiza o display
-    itemEl.querySelector('.small').textContent = `Quantidade: ${newQuantity}`;
-
-    // Atualiza o JSON salvo no DOM
-    const list = $('parsedMaterials');
-    let materials = JSON.parse(list.dataset.materials || '[]');
-    const materialToUpdate = materials.find(m => m.name === currentName && m.quantity === currentQuantity);
-    
-    if (materialToUpdate) {
-        materialToUpdate.quantity = newQuantity;
-        list.dataset.materials = JSON.stringify(materials);
+function updateParsedMaterial(input, materialName){
+    if(parseInt(input.value) <= 0) {
+        if(confirm(`Tem certeza que deseja remover o item "${materialName}" da lista?`)) {
+            removeParsedMaterial(input.closest('.material-item'));
+        } else {
+            input.value = 1; // Volta para 1
+        }
     }
 }
-
-function removeParsedMaterial(button) {
-    const itemEl = button.closest('.material-item');
-    const name = itemEl.querySelector('strong').textContent;
-    
-    if (!confirm(`Remover "${name}" da lista?`)) return;
-    
-    // Simplesmente remove do DOM. O JSON salvo só será usado se o usuário não fizer mais edições.
-    itemEl.remove();
-    
-    // Melhoria: Reconstruir o JSON a partir dos itens restantes (opcional, mas mais robusto)
-    const list = $('parsedMaterials');
-    const remainingItems = Array.from(list.querySelectorAll('.material-item')).map(el => {
-        const name = el.querySelector('strong').textContent.trim();
-        const qtyText = el.querySelector('.small').textContent.replace('Quantidade: ', '').trim();
-        return { name, quantity: parseInt(qtyText, 10) };
-    });
-    
-    list.dataset.materials = JSON.stringify(remainingItems);
-    
-    if(remainingItems.length === 0) {
-        list.innerHTML = '<div class="small" style="color:var(--muted)">Lista limpa. Cole o texto acima e clique em "Processar Texto".</div>';
+function removeParsedMaterial(item){
+    item.remove();
+    // Verifica se a lista ficou vazia
+    if ($('parsedMaterials').querySelector('.material-item') === null) {
+        $('parsedMaterials').innerHTML = '<div class="small">Lista limpa.</div>';
         $('btnSaveMaterials').disabled = true;
     }
 }
 
-
-// Nova Turma (Importar Lista)
-$('btnNewClass').addEventListener('click', ()=>{
+// Criar Nova Turma
+if($('btnNewClass')) $('btnNewClass').addEventListener('click', ()=>{
     const row = $('newClassRow');
-    const btn = $('btnNewClass');
     const isVisible = row.style.display !== 'none';
     row.style.display = isVisible ? 'none' : 'flex';
-    btn.textContent = isVisible ? 'Nova Turma' : 'Cancelar';
 });
 
-$('saveNewClass').addEventListener('click', async function(){
-    if(!db) return;
-    this.disabled = true;
-    this.textContent = 'Criando...';
-    
+if($('saveNewClass')) $('saveNewClass').addEventListener('click', async function(){
     const name = $('newClassName').value.trim();
     const segment = $('newClassSegment').value;
 
-    if(!name || !segment) {
+    if(!name || !segment){
         alert('Preencha o nome da turma e selecione o segmento.');
-        this.disabled = false;
-        this.textContent = 'Criar';
         return;
     }
-    
+
+    this.disabled = true;
+    this.textContent = 'Salvando...';
+
     try{
-        const newClassRef = db.collection('classes').doc();
-        await newClassRef.set({
+        await db.collection('classes').add({
             name,
             segment,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        
-        alert(`Turma "${name}" criada com sucesso!`);
+        alert('Turma criada com sucesso!');
         $('newClassName').value = '';
         $('newClassSegment').value = '';
-        $('newClassRow').style.display = 'none';
-        $('btnNewClass').textContent = 'Nova Turma';
-        
+        $('newClassRow').style.display = 'none'; // Fecha o input
         await loadClassesSelects(); // Recarrega os selects
-        $('targetClass').value = newClassRef.id; // Seleciona a nova turma
-        
+        loadDashboardData(); // Atualiza dashboard
     }catch(err){
         console.error('Erro ao criar turma', err);
         alert('Erro ao criar turma: ' + (err.message || err));
@@ -1152,40 +1085,60 @@ $('saveNewClass').addEventListener('click', async function(){
 });
 
 
+// Salvar Materiais
 $('btnSaveMaterials').addEventListener('click', async function(){
-    if(!db) return;
     const classId = $('targetClass').value;
-    const list = $('parsedMaterials');
-    const materials = JSON.parse(list.dataset.materials || '[]');
+    const parsedItems = $('parsedMaterials').querySelectorAll('.material-item');
     
-    if(!classId) return alert('Selecione uma turma para salvar os materiais.');
-    if(materials.length === 0) return alert('Nenhum material para salvar. Processe o texto primeiro.');
+    if(!classId) {
+        alert('Selecione uma turma para salvar os materiais.');
+        return;
+    }
+    if(parsedItems.length === 0) {
+        alert('A lista de materiais processada está vazia.');
+        return;
+    }
     
+    if(!confirm(`Confirma salvar ${parsedItems.length} materiais na turma selecionada?`)) return;
+
     this.disabled = true;
     this.textContent = 'Salvando...';
 
     try{
+        const materials = [];
+        parsedItems.forEach(item => {
+            const input = item.querySelector('input[type="number"]');
+            const name = item.querySelector('span').textContent.trim();
+            const quantity = parseInt(input.value, 10);
+            
+            if(name && quantity > 0) {
+                materials.push({ name, quantity, classId });
+            }
+        });
+
+        if(materials.length === 0){
+            throw new Error('Nenhum material válido para salvar.');
+        }
+
         const batch = db.batch();
-        
         materials.forEach(m => {
             // Para um sistema mais robusto, seria bom verificar se o (name + classId) já existe.
             const newMaterialRef = db.collection('materials').doc();
             batch.set(newMaterialRef, {
                 name: m.name,
                 quantity: m.quantity,
-                classId: classId,
+                classId: m.classId,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
         });
-        
         await batch.commit();
+
         alert(`Sucesso! ${materials.length} materiais salvos na turma.`);
         
         // Limpa a interface
         $('materialText').value = '';
         $('parsedMaterials').innerHTML = '<div class="small">Materiais salvos! Limpe a lista para continuar.</div>';
         $('btnSaveMaterials').disabled = true;
-
         loadDashboardData(); // Atualiza contadores
 
     }catch(err){
@@ -1197,14 +1150,13 @@ $('btnSaveMaterials').addEventListener('click', async function(){
     }
 });
 
+// Carrega Turmas para os <select>
 async function loadClassesSelects(){
     if(!db) return;
     const selects = [$('targetClass'), $('studentClass'), $('studentsFilterClass'), $('qrClassSelect'), $('reportClass')];
-    
     try{
         const snap = await db.collection('classes').orderBy('name').get();
         const optionsHtml = ['<option value="">Escolha a turma</option>'];
-        
         snap.forEach(d => {
             const c = d.data();
             optionsHtml.push(`<option value="${d.id}">${c.name} (${SEGMENTS_MAP[c.segment] || 'Outros'})</option>`);
@@ -1214,7 +1166,7 @@ async function loadClassesSelects(){
             if(sel){
                 const currentValue = sel.value;
                 sel.innerHTML = optionsHtml.join('');
-                
+
                 // Para o filtro de alunos, a primeira opção é "Mostrar Todos"
                 if(sel.id === 'studentsFilterClass') {
                     sel.innerHTML = '<option value="">Mostrar Todos os Alunos (Filtro)</option>' + optionsHtml.slice(1).join('');
@@ -1226,34 +1178,24 @@ async function loadClassesSelects(){
                 }
             }
         });
-        
     }catch(err){
         console.error('Erro loadClassesSelects', err);
     }
 }
 
-if($('btnNewClass')) $('btnNewClass').addEventListener('click', ()=>{
-    const row = $('newClassRow');
-    const btn = $('btnNewClass');
-    const isVisible = row.style.display !== 'none';
-    row.style.display = isVisible ? 'none' : 'flex';
-    btn.textContent = isVisible ? 'Nova Turma' : 'Cancelar';
-});
-
 
 /* ---------------------------
-   MATERIAIS & TURMAS
+   MATERIALS & CLASSES (TAB)
    --------------------------- */
 
 async function loadClassesList(){
     if(!db) return;
     const list = $('classesList');
-    list.innerHTML = '';
+    list.innerHTML = '<div class="small">Carregando turmas...</div>';
     
     try {
         const snap = await db.collection('classes').orderBy('name').get();
-        
-        if(snap.empty){
+        if(snap.empty) {
             list.innerHTML = '<div class="small">Nenhuma turma cadastrada.</div>';
             return;
         }
@@ -1274,7 +1216,6 @@ async function loadClassesList(){
             `;
             list.appendChild(e);
         });
-
     } catch(err) {
         console.error('Erro loadClassesList', err);
         list.innerHTML = '<div class="small" style="color:var(--danger)">Erro ao carregar turmas.</div>';
@@ -1285,21 +1226,21 @@ async function deleteClass(classId, className) {
     if (!confirm(`Tem certeza que deseja apagar a turma "${className}" e TODOS os materiais/alunos/entregas vinculados a ela? Esta ação é irreversível!`)) {
         return;
     }
-    
     try {
         // 1. Apagar Materiais
         const materialsSnap = await db.collection('materials').where('classId', '==', classId).get();
         const materialBatch = db.batch();
         materialsSnap.forEach(doc => materialBatch.delete(doc.ref));
         await materialBatch.commit();
-
+        
         // 2. Apagar Alunos
         const studentsSnap = await db.collection('students').where('classId', '==', classId).get();
         const studentBatch = db.batch();
         studentsSnap.forEach(doc => studentBatch.delete(doc.ref));
         await studentBatch.commit();
-        
+
         // 3. Apagar Entregas
+        // Isso é mais complexo e pode ser pulado se o volume de dados for grande, mas para o modelo, faremos a limpeza:
         const deliveriesSnap = await db.collection('deliveries').where('classId', '==', classId).get();
         const deliveryBatch = db.batch();
         deliveriesSnap.forEach(doc => deliveryBatch.delete(doc.ref));
@@ -1307,57 +1248,60 @@ async function deleteClass(classId, className) {
 
         // 4. Apagar a Turma
         await db.collection('classes').doc(classId).delete();
-
-        alert(`Turma "${className}" e todos os dados vinculados apagados com sucesso.`);
         
+        alert(`Turma "${className}" e todos os dados relacionados apagados com sucesso.`);
+        // Recarregar listas e dashboard
         loadClassesList();
         loadClassesSelects();
         loadDashboardData();
-        $('materialsOfClass').innerHTML = '<div class="small">Clique em "Abrir" em uma turma ao lado.</div>';
 
-    } catch (err) {
+    } catch(err) {
         console.error('Erro ao apagar turma', err);
         alert('Erro ao apagar turma: ' + (err.message || err));
     }
 }
 
-
 async function loadMaterialsOfClass(classId){
     if(!db) return;
     const container = $('materialsOfClass');
-    container.innerHTML = '<div>Carregando...</div>';
-    
+    container.innerHTML = '<div class="small">Carregando materiais...</div>';
+
+    // Desativa a aba atual e marca a nova
+    document.querySelectorAll('#classesList .material-item').forEach(e => e.classList.remove('active'));
+    document.querySelector(`#classesList .material-item button[onclick*="${classId}"]`).closest('.material-item').classList.add('active');
+
+
     try{
-        const [snap, classDoc] = await Promise.all([
-            db.collection('materials').where('classId', '==', classId).orderBy('name').get(),
-            db.collection('classes').doc(classId).get()
-        ]);
-        
+        const classDoc = await db.collection('classes').doc(classId).get();
         const className = classDoc.exists ? classDoc.data().name : 'Turma Desconhecida';
         
-        container.innerHTML = `<h3 class="section-title" style="margin-top: 0; font-size: 18px;">Materiais de: ${className}</h3>`;
+        const matsnap = await db.collection('materials').where('classId','==',classId).orderBy('name').get();
+        const materialsArray = [];
+        matsnap.forEach(d => materialsArray.push({id: d.id, ...d.data()}));
+        
+        container.innerHTML = `<h4 class="section-title" style="font-size: 18px; margin-top: 0;">Materiais para: ${className}</h4>`;
 
-        if(snap.empty){
-            container.innerHTML += '<div class="small">Nenhum material cadastrado para esta turma.</div>';
+        if(materialsArray.length === 0){
+            container.innerHTML += '<div class="small">Nenhum material cadastrado para esta turma. Use a aba "Importar Lista" para adicionar.</div>';
             return;
         }
 
-        const listHtml = snap.docs.map(d => {
-            const m = d.data();
+        const listHtml = materialsArray.map(m => {
+            const qty = m.quantity || 1;
             return `
                 <div class="material-item">
                     <div>
-                        <strong>${m.name}</strong> 
-                        <div class="small">Quantidade Requerida: ${m.quantity}</div>
+                        <strong style="font-size:15px;">${qty}x</strong> 
+                        <span style="margin-left: 10px;">${m.name}</span>
                     </div>
                     <div style="display:flex;gap:6px">
-                        <button class="btn secondary" style="padding: 6px 10px; font-size:12px;" onclick="editMaterial('${d.id}', ${m.quantity})">Editar Qtd</button>
-                        <button class="btn secondary" style="background:var(--danger);color:white; padding: 6px 10px; font-size:12px;" onclick="deleteMaterial('${d.id}', '${m.name.replace(/'/g, "\\'")}')">Apagar</button>
+                        <button class="btn secondary" style="padding: 6px 10px; font-size:12px;" onclick="editMaterial('${m.id}', ${qty})">Editar Qtd</button>
+                        <button class="btn secondary" style="background:var(--danger);color:white; padding: 6px 10px; font-size:12px;" onclick="deleteMaterial('${m.id}', '${m.name.replace(/'/g, "\\'")}')">Apagar</button>
                     </div>
                 </div>
             `;
         }).join('');
-        
+
         container.innerHTML += `<div class="list">${listHtml}</div>`;
 
     }catch(err){
@@ -1370,19 +1314,28 @@ async function editMaterial(materialId, currentQuantity) {
     const newQty = prompt(`Editar Quantidade Requerida (Atual: ${currentQuantity}):`);
     
     if (newQty === null || isNaN(parseInt(newQty, 10)) || parseInt(newQty, 10) < 1) {
-        if (newQty !== null) alert('Quantidade inválida. Mínimo é 1.');
-        return;
+        if (newQty !== null && newQty.trim() !== "") {
+            alert('A quantidade deve ser um número inteiro positivo.');
+        }
+        return; 
     }
     
-    try {
-        await db.collection('materials').doc(materialId).update({ 
-            quantity: parseInt(newQty, 10) 
-        });
-        alert('Quantidade atualizada com sucesso. Recarregue a aba de materiais.');
-        // Recarrega a lista para refletir a mudança (precisa do classId, que não está aqui, então força o user a re-abrir)
-        const currentClassId = document.querySelector('#materialsOfClass h3') ? document.querySelector('#materialsOfClass h3').id : null;
-        if(currentClassId) loadMaterialsOfClass(currentClassId);
+    const quantity = parseInt(newQty, 10);
 
+    try {
+        await db.collection('materials').doc(materialId).update({ quantity });
+        
+        // Recarrega a lista para refletir a mudança (necessário saber a classId, mas vamos assumir que foi chamada a partir do loadMaterialsOfClass)
+        const activeClass = document.querySelector('#classesList .material-item.active');
+        if(activeClass) {
+            const button = activeClass.querySelector('button[onclick*="loadMaterialsOfClass"]');
+            if (button) {
+                const classId = button.getAttribute('onclick').match(/'([^']+)'/)[1];
+                loadMaterialsOfClass(classId); 
+            }
+        }
+        loadDashboardData(); // Atualiza contadores
+        alert('Quantidade atualizada com sucesso!');
     } catch (err) {
         console.error('Erro ao editar material', err);
         alert('Erro ao editar material: ' + (err.message || err));
@@ -1390,15 +1343,23 @@ async function editMaterial(materialId, currentQuantity) {
 }
 
 async function deleteMaterial(materialId, materialName) {
-    if (!confirm(`Tem certeza que deseja apagar o material "${materialName}"?`)) return;
-    
+    if (!confirm(`Tem certeza que deseja apagar o material "${materialName}"? Isso não removerá entregas antigas.`)) {
+        return;
+    }
     try {
         await db.collection('materials').doc(materialId).delete();
-        alert(`Material "${materialName}" apagado.`);
         
         // Recarrega a lista
-        const currentClassId = document.querySelector('#materialsOfClass h3') ? document.querySelector('#materialsOfClass h3').id : null;
-        if(currentClassId) loadMaterialsOfClass(currentClassId);
+        const activeClass = document.querySelector('#classesList .material-item.active');
+        if(activeClass) {
+            const button = activeClass.querySelector('button[onclick*="loadMaterialsOfClass"]');
+            if (button) {
+                const classId = button.getAttribute('onclick').match(/'([^']+)'/)[1];
+                loadMaterialsOfClass(classId); 
+            }
+        }
+        loadDashboardData();
+        alert('Material apagado com sucesso.');
 
     } catch (err) {
         console.error('Erro ao apagar material', err);
@@ -1406,155 +1367,152 @@ async function deleteMaterial(materialId, materialName) {
     }
 }
 
+
 /* ---------------------------
-   ALUNOS (STUDENTS)
+   STUDENTS (TAB)
    --------------------------- */
 
-$('btnAddStudent').addEventListener('click', async function(){
-    if(!db) return;
-    
+async function addStudent(){
     const name = $('studentName').value.trim();
     const classId = $('studentClass').value;
-    const studentIdInput = $('studentIdInput').value.trim();
-    
-    if(!name || !classId) return alert('Preencha o nome do aluno e escolha a turma.');
-    
-    this.disabled = true;
-    this.textContent = 'Adicionando...';
+    const studentId = $('studentIdInput').value.trim();
+
+    if(!name || !classId){
+        alert('Preencha o nome do aluno e selecione a turma.');
+        return;
+    }
+
+    $('btnAddStudent').disabled = true;
+    $('btnAddStudent').textContent = 'Adicionando...';
 
     try{
-        const newStudentRef = db.collection('students').doc();
-        await newStudentRef.set({
+        await db.collection('students').add({
             name,
             classId,
-            studentId: studentIdInput || null,
+            studentId, // Matrícula ou número
+            signatureDataURL: null, // Campo para assinatura
+            signerName: null,       // Nome do responsável
+            clerkName: null,        // Nome do conferente
+            signatureTimestamp: null,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        
-        alert(`Aluno "${name}" adicionado com sucesso.`);
-        
-        // Limpa a interface
+
         $('studentName').value = '';
         $('studentIdInput').value = '';
-
-        loadStudentsList($('studentsFilterClass').value); // Recarrega a lista com o filtro atual
+        loadStudentsList($('studentsFilterClass').value); // Recarrega a lista filtrada
         loadDashboardData(); // Atualiza contadores
-
+        alert('Aluno adicionado com sucesso!');
+        
     }catch(err){
         console.error('Erro ao adicionar aluno', err);
         alert('Erro ao adicionar aluno: ' + (err.message || err));
     }finally{
-        this.disabled = false;
-        this.textContent = 'Adicionar';
+        $('btnAddStudent').disabled = false;
+        $('btnAddStudent').textContent = 'Adicionar';
     }
-});
+}
+$('btnAddStudent').addEventListener('click', addStudent);
 
-$('studentsFilterClass').addEventListener('change', function(){
-    loadStudentsList(this.value);
-});
-
+// Filtro de Alunos
+if ($('studentsFilterClass')) {
+    $('studentsFilterClass').addEventListener('change', (e) => {
+        loadStudentsList(e.target.value);
+    });
+}
 
 async function loadStudentsList(filterClassId = null){
     if(!db) return;
     const list = $('studentsList');
-    list.innerHTML = '<div>Carregando...</div>';
+    list.innerHTML = '<div class="small">Carregando alunos...</div>';
     
-    try{
+    try {
         let query = db.collection('students').orderBy('name');
-        if(filterClassId) query = query.where('classId', '==', filterClassId);
         
-        const [snap, classesSnap] = await Promise.all([
-            query.get(),
-            db.collection('classes').get()
-        ]);
-        
-        const classesMap = {};
-        classesSnap.forEach(d => classesMap[d.id] = d.data().name);
+        if(filterClassId && filterClassId !== 'all'){
+            query = query.where('classId', '==', filterClassId);
+        }
 
-        if(snap.empty){
+        const snap = await query.get();
+        const classesMap = await getClassesMap(); // Busca o nome das turmas
+        
+        if(snap.empty) {
             list.innerHTML = '<div class="small">Nenhum aluno encontrado.</div>';
             return;
         }
-        
-        // Promises para verificar o status de entrega de cada aluno
-        const statusPromises = snap.docs.map(doc => checkStudentFullDelivery(doc.id));
-        const studentsStatus = await Promise.all(statusPromises);
-        const statusMap = studentsStatus.reduce((acc, status) => {
-            acc[status.studentId] = status.isComplete;
-            return acc;
-        }, {});
-
-        // Promises para buscar assinaturas
-        const signaturePromises = snap.docs.map(doc => db.collection('signatures').doc(doc.id).get());
-        const signatureSnaps = await Promise.all(signaturePromises);
-        const signatureMap = signatureSnaps.reduce((acc, sigSnap) => {
-            acc[sigSnap.id] = sigSnap.exists;
-            return acc;
-        }, {});
-
 
         list.innerHTML = '';
         snap.forEach(d => {
             const s = d.data();
             const studentId = d.id;
             const className = classesMap[s.classId] || 'Turma Desconhecida';
-            const isComplete = statusMap[studentId] || false;
-            const hasSignature = signatureMap[studentId] || false;
-
-            const statusColor = isComplete ? 'var(--success)' : 'var(--danger)';
-            const statusText = isComplete ? 'Completo' : 'Faltando Itens';
-            const signatureIndicator = hasSignature 
-                ? '<span style="color:var(--success); font-size: 10px; margin-left: 10px;">(Assinado)</span>' 
-                : '<span style="color:var(--danger); font-size: 10px; margin-left: 10px;">(Sem Assinatura)</span>';
+            const hasSignature = !!s.signatureDataURL;
+            const statusText = hasSignature ? `Entregue em ${new Date(s.signatureTimestamp.toDate()).toLocaleDateString('pt-BR')}` : 'Pendente';
+            const statusColor = hasSignature ? 'var(--success)' : 'var(--danger)';
 
             const e = document.createElement('div');
-            e.className = 'student-card';
+            e.className = 'student-card'; 
             e.innerHTML = `
-                <div>
-                    <strong>${s.name}</strong> (${s.studentId || 'N/A'})
-                    <div class="small">${className}</div>
-                    <div class="small" style="font-weight: 600; color: ${statusColor}; margin-top: 4px;">Status: ${statusText}${signatureIndicator}</div>
+                <div style="flex:1; min-width: 50%;">
+                    <strong style="font-size: 15px;">${s.name}</strong> 
+                    <div class="small">
+                        Turma: ${className} | Matrícula: ${s.studentId || 'N/A'}
+                    </div>
+                    <div class="small" style="font-weight: 500; color:${statusColor}; margin-top: 4px;">
+                        Status: ${statusText}
+                    </div>
                 </div>
-                <div style="display:flex;gap:8px; align-items:center;">
-                    <button class="btn" style="padding: 6px 10px; font-size:12px;" onclick="openStudent('${studentId}')">Conferir</button>
-                    <button class="btn secondary" style="padding: 6px 10px; font-size:12px;" onclick="generatePrintableChecklist('${studentId}')">Imprimir Doc.</button>
-                    <button class="btn secondary" style="background:var(--danger);color:white; padding: 6px 10px; font-size:12px;" onclick="deleteStudent('${studentId}', '${s.name.replace(/'/g, "\\'")}')">Apagar</button>
+                <div style="display:flex;gap:8px; align-items:center; min-width: 40%;">
+                    <button class="btn secondary" style="padding: 6px 10px; font-size:14px;" onclick="openStudent('${studentId}')">Checklist</button>
+                    <button class="btn" style="padding: 6px 10px; font-size:14px;" onclick="generatePrintableChecklist('${studentId}')">Imprimir Doc</button>
+                    <button class="btn secondary" style="background:var(--danger);color:white; padding: 6px 10px; font-size:14px;" onclick="deleteStudent('${studentId}', '${s.name.replace(/'/g, "\\'")}')">Apagar</button>
                 </div>
             `;
             list.appendChild(e);
         });
-
-    }catch(err){
+    } catch(err) {
         console.error('Erro loadStudentsList', err);
-        list.innerHTML = '<div class="small" style="color:var(--danger)">Erro ao carregar lista de alunos.</div>';
+        list.innerHTML = '<div class="small" style="color:var(--danger)">Erro ao carregar alunos.</div>';
     }
 }
 
+let classesMapCache = null;
+async function getClassesMap(){
+    if(classesMapCache) return classesMapCache;
+    if(!db) return {};
 
-async function deleteStudent(studentDocId, studentName) {
-    if (!confirm(`Tem certeza que deseja apagar o aluno "${studentName}" e todos os registros de entrega e assinatura vinculados? Esta ação é irreversível!`)) {
+    try {
+        const snap = await db.collection('classes').get();
+        const map = {};
+        snap.forEach(d => {
+            map[d.id] = d.data().name;
+        });
+        classesMapCache = map;
+        return map;
+    } catch(e) {
+        console.error('Erro getClassesMap', e);
+        return {};
+    }
+}
+
+async function deleteStudent(studentId, studentName) {
+    if (!confirm(`Tem certeza que deseja apagar o aluno "${studentName}" e todos os registros de entrega vinculados?`)) {
         return;
     }
-    
     try {
-        // 1. Apagar Entregas
-        const deliveriesSnap = await db.collection('deliveries').where('studentId', '==', studentDocId).get();
-        const deliveryBatch = db.batch();
-        deliveriesSnap.forEach(doc => deliveryBatch.delete(doc.ref));
-        await deliveryBatch.commit();
+        // Apagar Entregas (deliveries)
+        const deliveriesSnap = await db.collection('deliveries').where('studentId', '==', studentId).get();
+        const batch = db.batch();
+        deliveriesSnap.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
 
-        // 2. Apagar Assinatura (se existir)
-        await db.collection('signatures').doc(studentDocId).delete();
+        // Apagar Aluno
+        await db.collection('students').doc(studentId).delete();
         
-        // 3. Apagar o Aluno
-        await db.collection('students').doc(studentDocId).delete();
+        loadStudentsList($('studentsFilterClass').value); // Recarrega lista
+        loadDashboardData(); // Atualiza contadores
+        alert(`Aluno "${studentName}" apagado com sucesso.`);
 
-        alert(`Aluno "${studentName}" e dados vinculados apagados com sucesso.`);
-        
-        loadStudentsList($('studentsFilterClass').value);
-        loadDashboardData();
-
-    } catch (err) {
+    } catch(err) {
         console.error('Erro ao apagar aluno', err);
         alert('Erro ao apagar aluno: ' + (err.message || err));
     }
@@ -1562,429 +1520,541 @@ async function deleteStudent(studentDocId, studentName) {
 
 
 /* ---------------------------
-   CHECKLIST (MODAL DE CONFERÊNCIA)
+   CHECKLIST (MODAL) E ENTREGA
    --------------------------- */
 
-let signaturePadInstance = null; // Instância global para o SignaturePad
-
 /**
- * Salva a entrega de um material específico para um aluno.
- * @param {string} studentDocId - O ID do documento do aluno.
- * @param {string} materialId - O ID do documento do material.
- * @param {number} requiredQty - A quantidade requerida.
- * @param {number} newQty - A nova quantidade entregue.
- * @param {HTMLElement} inputEl - O elemento <input> da quantidade.
- * @param {HTMLElement} remainingEl - O elemento <span> da quantidade restante.
- * @returns {Promise<boolean>} True se salvou, false se deu erro.
+ * Salva a entrega de um item.
+ * @param {string} studentId 
+ * @param {string} materialId 
+ * @param {number} requiredQty 
+ * @param {number} newQty - Nova quantidade entregue (pode ser maior que a necessária)
+ * @param {HTMLElement} inputEl - Elemento de input (para feedback visual)
+ * @param {HTMLElement} remainingEl - Elemento de restante (para feedback visual)
+ * @param {boolean} isBatch - Indica se a chamada faz parte de uma operação de lote (mark all complete)
+ * @returns {Promise<boolean>}
  */
-async function saveDelivery(studentDocId, materialId, requiredQty, newQty, inputEl, remainingEl, isBatch = false){
-    if (!db) { alert('Firestore não inicializado.'); return false; }
-    
-    const delivered = Math.min(newQty, requiredQty);
-    const missing = requiredQty - delivered;
+async function saveDelivery(studentId, materialId, requiredQty, newQty, inputEl, remainingEl, isBatch = false){
+    if(!db || !auth.currentUser) {
+        if(!isBatch) alert('Você precisa estar logado para salvar entregas.');
+        return false;
+    }
+
+    const qtyToSave = Math.min(newQty, requiredQty);
+    const remaining = requiredQty - qtyToSave;
     const clerkName = getCurrentClerkName();
     
-    try{
-        const classId = (await db.collection('students').doc(studentDocId).get()).data().classId;
-        
-        await db.collection('deliveries').doc(`${studentDocId}_${materialId}`).set({
-            studentId: studentDocId,
-            materialId: materialId,
-            classId: classId,
-            quantityRequired: requiredQty,
-            quantityDelivered: delivered,
-            missing: missing,
-            clerkName: clerkName,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        // Atualiza o display imediatamente, mesmo em batch
-        inputEl.value = delivered;
-        remainingEl.textContent = missing;
-        remainingEl.style.color = missing > 0 ? 'var(--danger)' : 'var(--success)';
+    // 1. Busca um documento de entrega existente
+    const existingDeliverySnap = await db.collection('deliveries')
+        .where('studentId', '==', studentId)
+        .where('materialId', '==', materialId)
+        .limit(1).get();
 
-        if(!isBatch) {
-            // Se não for parte de um batch, dá um feedback visual mais forte.
-            loadDashboardData();
+    try{
+        if(existingDeliverySnap.empty){
+            // 2. Não existe, cria um novo
+            await db.collection('deliveries').add({
+                studentId,
+                materialId,
+                classId: $('studentClassIdCache').value, // classId em cache no modal
+                quantityDelivered: qtyToSave,
+                requiredQuantity: requiredQty, // Guarda a quantidade requerida no momento
+                clerkName: clerkName,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } else {
+            // 3. Existe, atualiza
+            const docRef = existingDeliverySnap.docs[0].ref;
+            await docRef.update({
+                quantityDelivered: qtyToSave,
+                clerkName: clerkName,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        
+        // Atualiza UI (apenas se não for lote)
+        if(!isBatch){
+            inputEl.value = qtyToSave; // Corrige o valor para o máximo permitido (o que foi salvo)
+            remainingEl.textContent = remaining;
+            remainingEl.style.color = remaining > 0 ? 'var(--danger)' : 'var(--success)';
+            // Nenhuma notificação de sucesso se for lote, para não travar
         }
 
         return true;
-
-    } catch(e) {
-        console.error('Erro ao salvar entrega:', e);
-        if(!isBatch) alert('Erro ao salvar entrega: ' + (e.message || e));
+    }catch(err){
+        console.error('Erro ao salvar entrega', err);
+        if(!isBatch) alert('Erro ao salvar entrega: ' + (err.message || err));
         return false;
     }
 }
 
+/**
+ * Salva a assinatura do responsável e o nome do conferente no documento do aluno (collection 'students').
+ * @param {string} studentDocId - O ID do documento do aluno no Firestore.
+ * @param {string} dataURL - A imagem da assinatura em Data URL (base64).
+ * @param {string} signerName - O nome da pessoa que assinou (Responsável).
+ * @param {string} clerkName - O nome do conferente (Administrador da Escola).
+ * @returns {Promise<void>}
+ */
+async function saveSignature(studentDocId, dataURL, signerName, clerkName) {
+    if (!db) throw new Error('Firestore não inicializado.');
+
+    const data = {
+        signatureDataURL: dataURL,
+        signerName: signerName,
+        clerkName: clerkName,
+        signatureTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    try {
+        // Atualiza o documento do aluno com os dados de assinatura e conferente
+        await db.collection('students').doc(studentDocId).update(data);
+    } catch(err) {
+        console.error('Erro ao salvar assinatura', err);
+        // Re-throw para que a função chamadora possa alertar o usuário
+        throw new Error('Erro ao salvar assinatura e conferente: ' + (err.message || err));
+    }
+}
+
+let signaturePadInstance = null; // Instância global do SignaturePad
 
 /**
- * Abre o modal de conferência (checklist) para um aluno.
+ * Abre o modal de checklist de materiais para um aluno específico.
+ * Carrega a lista de materiais necessários, o status de entrega e a área de assinatura.
  * @param {string} studentDocId - O ID do documento do aluno no Firestore.
  */
 async function openStudent(studentDocId){
-    if(!db) return alert('Firestore não inicializado.');
-    
-    // 1. Limpa e prepara o modal
-    const modal = $('checklist-modal');
-    const box = modal.querySelector('.checklist-modal-box');
-    box.innerHTML = ''; // Limpa o conteúdo anterior
-    
-    // Destrói a instância anterior do SignaturePad se existir
-    if (signaturePadInstance) {
-        signaturePadInstance.off();
-        signaturePadInstance = null;
+    if(!db) return alert('Firestore não inicializado');
+
+    // 1. Inicializa o modal (Se ainda não existir)
+    let modal = $('checklist-modal');
+    if(!modal){
+        modal = document.createElement('div');
+        modal.id = 'checklist-modal';
+        document.body.appendChild(modal);
     }
-    
-    // 2. Fetch de Dados
-    const sdoc = await db.collection('students').doc(studentDocId).get();
-    if(!sdoc.exists) return alert('Aluno não encontrado');
-    const s = sdoc.data();
+    modal.innerHTML = `<div class="checklist-modal-box"></div>`; // Limpa o conteúdo e prepara a caixa
 
-    // 2.1. Fetch Class Name
-    let className = s.classId || 'Turma Desconhecida (ID: N/A)';
-    if(s.classId){
-        try{
-            const classDoc = await db.collection('classes').doc(s.classId).get();
-            if(classDoc.exists) className = classDoc.data().name;
-            else className = `Turma Desconhecida (ID: ${s.classId})`;
-        }catch(e){
-            console.error('Erro ao buscar nome da turma:', e);
-            className = `Erro ao buscar Turma (ID: ${s.classId})`;
-        }
-    }
-
-    // 2.2. Fetch Materials & Deliveries
-    const [matsnap, deliveriesSnap, signatureSnap] = await Promise.all([
-        db.collection('materials').where('classId','==',s.classId).get(),
-        db.collection('deliveries').where('studentId','==',studentDocId).get(),
-        db.collection('signatures').doc(studentDocId).get()
-    ]);
-    
-    const materialsArray = [];
-    matsnap.forEach(m=> materialsArray.push({id:m.id, ...m.data()}));
-    materialsArray.sort((a,b)=> (a.name||'').localeCompare(b.name||'')); // Ordena por nome
-
-    const deliveredQuantities = {}; // Mapeia {materialId: {quantity: N, by: clerkName, timestamp: T}}
-    deliveriesSnap.forEach(d => {
-        const data = d.data();
-        deliveredQuantities[data.materialId] = {
-            quantity: data.quantityDelivered || 0,
-            by: data.clerkName || 'Desconhecido',
-            timestamp: data.timestamp
-        };
-    });
-    
-    const signatureData = signatureSnap.exists ? signatureSnap.data() : null;
-    const hasExistingSignature = !!signatureData && !!signatureData.signatureUrl;
-    const currentClerkName = getCurrentClerkName();
-
-    // 3. Monta o Conteúdo
-
-    // --- Header ---
-    const header = document.createElement('div');
-    header.style = 'padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;';
-    header.innerHTML = `
-        <div>
-            <h3 class="section-title" style="margin: 0;">Checklist de Materiais</h3>
-            <div class="small">Aluno: <strong>${s.name}</strong> (${s.studentId || 'N/A'}) - Turma: ${className}</div>
-        </div>
-        <button id="closeChecklist" class="btn secondary" style="padding: 6px 10px; font-size: 14px;">Fechar</button>
-    `;
-    box.appendChild(header);
-
-    // --- List Area Header/Controls ---
-    const listControls = document.createElement('div');
-    listControls.style = 'padding: var(--pad); padding-bottom: 10px; border-bottom: 1px solid var(--border-color);';
-    listControls.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h4 class="section-title" style="font-size: 16px; margin: 0;">Itens da Lista</h4>
-            <button id="markCompleteBtn" class="btn secondary" style="padding: 6px 10px; font-size: 13px;">Marcar Todos como Entregues</button>
-        </div>
-    `;
-    box.appendChild(listControls);
-
-    // --- List Area ---
-    const listArea = document.createElement('div');
-    listArea.id = 'checklist-list-area';
-    
-    if (materialsArray.length === 0) {
-        listArea.innerHTML = '<div class="small" style="padding: 16px;">Nenhum material cadastrado para esta turma.</div>';
-    } else {
-        materialsArray.forEach(m => {
-            const id = m.id;
-            const required = m.quantity || 1;
-            const deliveryInfo = deliveredQuantities[id] || { quantity: 0, by: 'N/A', timestamp: null };
-            const delivered = deliveryInfo.quantity;
-            const remaining = required - delivered;
-            const remainingColor = remaining > 0 ? 'var(--danger)' : 'var(--success)';
-            const lastUpdate = deliveryInfo.timestamp ? new Date(deliveryInfo.timestamp.toDate()).toLocaleString('pt-BR') : 'Nunca';
-
-            const item = document.createElement('div');
-            item.className = 'checklist-item';
-            item.innerHTML = `
-                <div class="checklist-item-details">
-                    <strong style="font-size: 15px;">${m.name}</strong> 
-                    <div class="small">Requerido: ${required} | Última Conf.: ${lastUpdate} (${deliveryInfo.by})</div>
-                </div>
-                <div class="checklist-item-controls">
-                    <label class="small" style="font-weight: 500; min-width: 100px; text-align: right;">Entregue:</label>
-                    <input type="number" 
-                        min="0" 
-                        max="${required}" 
-                        value="${delivered}" 
-                        data-required="${required}" 
-                        data-matid="${id}"
-                        class="input delivery-input"
-                        style="width: 60px; text-align: center;" />
-                    <label class="small" style="font-weight: 500; min-width: 100px; text-align: right;">Faltam: 
-                        <span class="remaining-qty" style="color: ${remainingColor}; font-weight: 700;">${remaining}</span>
-                    </label>
-                    <button class="btn save-delivery-btn" style="padding: 6px 10px; font-size: 12px; min-width: 70px;">Salvar</button>
-                </div>
-            `;
-            listArea.appendChild(item);
-        });
-    }
-    box.appendChild(listArea);
-
-    // --- Signature Area ---
-    const signatureArea = document.createElement('div');
-    signatureArea.id = 'signature-area';
-    signatureArea.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 10px;">
-            <h4 class="section-title" style="font-size: 16px; margin: 0;">Assinatura do Responsável</h4>
-            <button id="toggleSignatureBtn" class="btn secondary" style="padding: 6px 10px; font-size: 13px;">
-                ${hasExistingSignature ? 'Ver Assinatura' : 'Abrir Assinatura'}
-            </button>
-        </div>
-
-        <div id="signature-preview-container" style="display:${hasExistingSignature ? 'block' : 'none'};">
-            <img id="signature-preview" src="${signatureData?.signatureUrl || ''}" alt="Assinatura prévia" />
-            <div class="small" style="margin-bottom: 10px; color: var(--muted);">Assinatura: ${signatureData?.signerName || 'N/A'} - Conferente: ${signatureData?.clerkName || 'N/A'}</div>
-            <div class="small" style="margin-bottom: 10px; color: var(--muted);">Salvo em: ${signatureData?.timestamp ? new Date(signatureData.timestamp.toDate()).toLocaleString('pt-BR') : 'N/A'}</div>
-        </div>
-
-        <div id="signature-content" style="display:${hasExistingSignature ? 'none' : 'block'};">
-            <canvas id="signature-canvas"></canvas>
-            <div class="row" style="margin-top: 5px;">
-                <input id="signerName" class="input" placeholder="Nome Completo do Responsável" value="${s.signerName || ''}" ${hasExistingSignature ? 'disabled' : ''}/>
-            </div>
-            <div class="row" style="margin-top: 8px;">
-                <button id="clearSignature" class="btn secondary" style="width: 100px;">Limpar</button>
-                <button id="saveSignature" class="btn" style="flex:1;">Salvar Assinatura & Conferente</button>
-            </div>
-        </div>
-        <div class="small" style="margin-top: 10px;">Conferente atual: <strong>${currentClerkName}</strong></div>
-    `;
-    box.appendChild(signatureArea);
-
-    // --- 5. Exibe o modal ---
-    modal.classList.add('visible');
-    document.body.style.overflow = 'hidden';
-
-    // --- 6. Listeners do Modal ---
-    $('closeChecklist').addEventListener('click', ()=>{
-        modal.classList.remove('visible');
-        document.body.style.overflow = '';
-        loadStudentsList($('studentsFilterClass').value); // Recarrega a lista para atualizar o status de assinatura
-    });
-
-    // Toggle Assinatura
-    const toggleBtn = $('toggleSignatureBtn');
-    const signatureContent = $('signature-content');
-    const previewContainer = $('signature-preview-container');
-
-    // Se houver assinatura prévia, já exibe por padrão (configurado no innerHTML)
-    if (hasExistingSignature) {
-        signatureContent.style.display = 'none';
-        previewContainer.style.display = 'block';
-        toggleBtn.textContent = 'Ocultar Assinatura';
-    }
-
-    toggleBtn.addEventListener('click', function() {
-        const isContentVisible = signatureContent.style.display === 'block';
+    try{
+        // 2. Fetch Student Info
+        const sdoc = await db.collection('students').doc(studentDocId).get();
+        if(!sdoc.exists) return alert('Aluno não encontrado');
+        const s = sdoc.data();
         
-        if(isContentVisible) {
-            signatureContent.style.display = 'none';
-            if(hasExistingSignature) previewContainer.style.display = 'block';
-            this.textContent = hasExistingSignature ? 'Ver Assinatura' : 'Abrir Assinatura';
+        // Cache da Class ID para uso no saveDelivery
+        if (!$('studentClassIdCache')) {
+            const cache = document.createElement('input');
+            cache.type = 'hidden';
+            cache.id = 'studentClassIdCache';
+            document.body.appendChild(cache);
+        }
+        $('studentClassIdCache').value = s.classId;
+
+        // 3. Fetch Class Name e Materials
+        let className = s.classId || 'Turma Desconhecida';
+        let materialsArray = [];
+        if(s.classId){
+            try{
+                const [classDoc, matsnap] = await Promise.all([
+                    db.collection('classes').doc(s.classId).get(),
+                    db.collection('materials').where('classId','==',s.classId).get()
+                ]);
+                if(classDoc.exists) className = classDoc.data().name;
+                matsnap.forEach(m=> materialsArray.push({id:m.id, ...m.data()}));
+                materialsArray.sort((a,b)=> (a.name||'').localeCompare(b.name||'')); // Ordena por nome
+            }catch(e){
+                console.error('Erro ao buscar turma/materiais:', e);
+                className = 'Erro ao buscar Turma';
+            }
         } else {
-            signatureContent.style.display = 'block';
-            previewContainer.style.display = 'none';
-            this.textContent = hasExistingSignature ? 'Ocultar Assinatura' : 'Ocultar';
+            // Sem turma, não tem lista
+            materialsArray = [];
         }
 
-        // Inicializa o SignaturePad apenas se a área estiver sendo aberta e não houver instância
-        if(!signaturePadInstance && signatureContent.style.display === 'block') {
-             const canvas = $('signature-canvas');
-             // Ajusta o canvas para caber no container (essencial para mobile)
-             function resizeCanvas() {
-                const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                canvas.width = canvas.offsetWidth * ratio;
-                canvas.height = canvas.offsetHeight * ratio;
-                canvas.getContext("2d").scale(ratio, ratio);
-            }
-            resizeCanvas();
-            window.onresize = resizeCanvas;
-            
-            signaturePadInstance = new SignaturePad(canvas, {
-                backgroundColor: 'rgb(255, 255, 255)',
-                penColor: 'rgb(0, 0, 0)'
+        // 4. Fetch Entregas (Deliveries)
+        const deliveriesSnap = await db.collection('deliveries').where('studentId','==',studentDocId).get();
+        let deliveredQuantities = {}; // Mapeia {materialId: {quantity: N, by: clerkName, timestamp: T}}
+        deliveriesSnap.forEach(d => {
+            const data = d.data();
+            deliveredQuantities[data.materialId] = { 
+                quantity: data.quantityDelivered || 0,
+                by: data.clerkName || 'Desconhecido',
+                timestamp: data.timestamp 
+            };
+        });
+
+
+        const box = modal.querySelector('.checklist-modal-box');
+        
+        // --- Header ---
+        const header = document.createElement('div');
+        header.style = 'padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;';
+        header.innerHTML = `
+            <div>
+                <h3 class="section-title" style="margin: 0;">Checklist de Materiais</h3>
+                <div class="small">Aluno: <strong>${s.name}</strong> (${s.studentId || 'N/A'}) - Turma: ${className}</div>
+            </div>
+            <button id="closeChecklist" class="btn secondary" style="padding: 10px 14px; font-size: 14px;">Fechar</button>
+        `;
+        box.appendChild(header);
+
+        // --- List Area Header/Controls ---
+        const listControls = document.createElement('div');
+        listControls.style = 'padding: var(--pad); padding-bottom: 10px; border-bottom: 1px solid var(--border-color);';
+        listControls.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h4 class="section-title" style="font-size: 16px; margin: 0;">Itens da Lista</h4>
+                <button id="markCompleteBtn" class="btn secondary" style="padding: 10px 14px; font-size: 14px;">Marcar Todos como Entregues</button>
+            </div>
+        `;
+        box.appendChild(listControls);
+
+        // --- List Area ---
+        const listArea = document.createElement('div');
+        listArea.id = 'checklist-list-area';
+        
+        if (materialsArray.length === 0) {
+            listArea.innerHTML = '<div class="small" style="padding: 16px;">Nenhum material cadastrado para esta turma.</div>';
+        } else {
+            materialsArray.forEach(m => {
+                const id = m.id;
+                const required = m.quantity || 1;
+                const deliveredInfo = deliveredQuantities[id] || { quantity: 0 };
+                const delivered = deliveredInfo.quantity;
+                const remaining = required - delivered;
+                const remainingColor = remaining > 0 ? 'var(--danger)' : 'var(--success)';
+                const deliveredBy = deliveredInfo.by || 'N/A';
+                const deliveredDate = deliveredInfo.timestamp ? new Date(deliveredInfo.timestamp.toDate()).toLocaleDateString('pt-BR') : 'N/A';
+                
+                // Item de checklist
+                listArea.innerHTML += `
+                    <div class="checklist-item">
+                        <div class="checklist-item-details">
+                            <strong style="font-size: 15px;">${required}x ${m.name}</strong>
+                            <div class="small" style="margin-top: 4px;">
+                                <span style="font-weight: 600; color: ${remainingColor};">Falta: <span class="remaining-qty">${remaining}</span></span>
+                                | Última Conf.: ${deliveredDate} por ${deliveredBy}
+                            </div>
+                        </div>
+                        <div class="checklist-item-controls">
+                            <input type="number" 
+                                class="delivery-input input" 
+                                style="width: 70px !important; padding: 8px; text-align: center; font-size: 15px;" 
+                                value="${delivered}" 
+                                min="0" 
+                                data-matid="${id}" 
+                                data-required="${required}"
+                            />
+                            <button class="btn secondary save-delivery-btn" style="padding: 8px 14px; font-size: 14px;">Salvar</button>
+                        </div>
+                    </div>
+                `;
             });
+        }
+        box.appendChild(listArea);
+
+
+        // --- 5. Área de Assinatura ---
+        const hasExistingSignature = !!s.signatureDataURL;
+        const currentClerkName = getCurrentClerkName();
+        const signaturePreviewStyle = hasExistingSignature ? 'display: block;' : 'display: none;';
+        const signatureCanvasStyle = hasExistingSignature ? 'display: none;' : 'display: block;';
+        
+        const signatureArea = document.createElement('div');
+        signatureArea.id = 'signature-area';
+        signatureArea.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h4 class="section-title" style="font-size: 16px; margin: 0;">Assinatura e Conferência</h4>
+                <button id="toggleSignatureBtn" class="btn secondary" style="padding: 10px 14px; font-size: 14px;">
+                    ${hasExistingSignature ? 'Ver Assinatura' : 'Abrir Assinatura'}
+                </button>
+            </div>
             
-            $('clearSignature').addEventListener('click', () => signaturePadInstance.clear());
-            
-            $('saveSignature').addEventListener('click', async function(){
-                if(signaturePadInstance.isEmpty()) return alert('Por favor, colete a assinatura primeiro.');
-                const signerName = $('signerName').value.trim();
-                if(!signerName) return alert('Por favor, preencha o nome do responsável.');
+            <div id="signature-content" style="display:none; margin-top: 15px;">
+                <div id="signature-preview-container" style="${signaturePreviewStyle}">
+                    <div class="small">Assinatura Salva: ${s.signerName || 'N/A'} (Conferente: ${s.clerkName || 'N/A'})</div>
+                    <img id="signature-preview" src="${s.signatureDataURL || ''}" alt="Assinatura Salva" />
+                </div>
                 
+                <div id="canvas-controls" style="${signatureCanvasStyle}">
+                    <canvas id="signature-canvas"></canvas>
+                    <div class="row" style="margin-top: 5px;">
+                        <input id="signerName" class="input" placeholder="Nome Completo do Responsável" value="${s.signerName || ''}" ${hasExistingSignature ? 'disabled' : ''}/>
+                    </div>
+                    <div class="row" style="margin-top: 8px;">
+                        <button id="clearSignature" class="btn secondary" style="width: 100px;">Limpar</button>
+                        <button id="saveSignature" class="btn" style="flex:1;" ${hasExistingSignature ? 'disabled' : ''}>Salvar Assinatura & Conferente</button>
+                    </div>
+                </div>
+                <div class="small" style="margin-top: 10px;">Conferente atual: <strong>${currentClerkName}</strong></div>
+            </div> 
+        `;
+        box.appendChild(signatureArea);
+        
+        // --- 6. Exibe o modal ---
+        modal.classList.add('visible');
+        document.body.style.overflow = 'hidden';
+
+        // --- 7. Listeners do Modal ---
+        $('closeChecklist').addEventListener('click', ()=>{
+            modal.classList.remove('visible');
+            document.body.style.overflow = '';
+            loadStudentsList($('studentsFilterClass').value); // Recarrega a lista para atualizar o status de assinatura
+        });
+
+        // Toggle Assinatura
+        const toggleBtn = $('toggleSignatureBtn');
+        const signatureContent = $('signature-content');
+        const canvasControls = $('canvas-controls');
+
+        // Se houver assinatura prévia, já exibe por padrão (mas desabilitada a edição)
+        if (hasExistingSignature) { 
+            signatureContent.style.display = 'block'; 
+        }
+
+        toggleBtn.addEventListener('click', function() {
+            const isVisible = signatureContent.style.display === 'block';
+            signatureContent.style.display = isVisible ? 'none' : 'block';
+            this.textContent = isVisible ? (hasExistingSignature ? 'Ver Assinatura' : 'Abrir Assinatura') : (hasExistingSignature ? 'Ocultar Assinatura' : 'Ocultar');
+            
+            // Inicializa o SignaturePad apenas se for o primeiro acesso e a área estiver sendo aberta
+            if(!hasExistingSignature && !signaturePadInstance && !isVisible) {
+                const canvas = $('signature-canvas');
+                signaturePadInstance = new SignaturePad(canvas, {
+                    backgroundColor: 'rgb(255, 255, 255)' 
+                });
+                canvasControls.style.display = 'block';
+                $('signature-preview-container').style.display = 'none';
+            }
+        });
+
+        // Limpar Assinatura
+        if($('clearSignature')) $('clearSignature').addEventListener('click', ()=>{
+            if(signaturePadInstance) signaturePadInstance.clear();
+        });
+
+        // Salvar Assinatura
+        if($('saveSignature')) $('saveSignature').addEventListener('click', async function(){
+            const signerName = $('signerName').value.trim();
+            const clerkName = getCurrentClerkName();
+            
+            if(!signerName){
+                alert('Preencha o nome do responsável.');
+                return;
+            }
+            if(!signaturePadInstance || signaturePadInstance.isEmpty()){
+                 alert('Por favor, colete a assinatura na área acima.');
+                 return;
+            }
+
+            this.disabled = true;
+            this.textContent = 'Salvando...';
+            
+            try{
+                const dataURL = signaturePadInstance.toDataURL("image/png");
+                await saveSignature(studentDocId, dataURL, signerName, clerkName);
+
+                alert('Assinatura e dados de conferência salvos com sucesso!');
+                
+                // Feedback visual de sucesso e desabilita edição
+                this.textContent = 'Assinatura Salva';
+                $('clearSignature').disabled = true;
+                $('signerName').disabled = true;
+                
+                // Atualiza a pré-visualização (se fosse reabrir)
+                const preview = $('signature-preview');
+                preview.src = dataURL;
+                $('signature-preview-container').style.display = 'block';
+                canvasControls.style.display = 'none';
+
+            }catch(e){
+                alert(e.message || 'Erro ao salvar assinatura');
+            }finally{
+                // Se deu erro, reabilita o botão
+                if(this.textContent !== 'Assinatura Salva') {
+                    this.disabled = false;
+                    this.textContent = 'Salvar Assinatura & Conferente';
+                }
+            }
+        });
+
+
+        // 8. Listeners para os itens de entrega
+        listArea.querySelectorAll('.checklist-item').forEach(item => {
+            const inputEl = item.querySelector('.delivery-input');
+            const remainingEl = item.querySelector('.remaining-qty');
+            const saveBtn = item.querySelector('.save-delivery-btn');
+            const matId = inputEl.dataset.matid;
+            const requiredQty = parseInt(inputEl.dataset.required, 10);
+
+            // Listener para o input de mudança de valor
+            inputEl.addEventListener('input', function() {
+                let newQty = parseInt(this.value, 10);
+                // Limita a quantidade visível ao máximo digitado, mas o salvamento limita ao requerido
+                const delivered = Math.min(newQty, requiredQty); 
+                const remaining = requiredQty - delivered;
+                
+                remainingEl.textContent = remaining;
+                remainingEl.style.color = remaining > 0 ? 'var(--danger)' : 'var(--success)';
+            });
+
+            // Listener para o botão Salvar
+            saveBtn.addEventListener('click', async function(){
                 this.disabled = true;
-                this.textContent = 'Salvando...';
+                this.textContent = '...';
                 
-                try{
-                    // 1. Converte a assinatura para base64
-                    const dataURL = signaturePadInstance.toDataURL('image/png');
-                    
-                    // 2. Salva a imagem no Storage (usando o ID do aluno como nome do arquivo)
-                    const storageRef = storage.ref();
-                    const signatureRef = storageRef.child(`signatures/${studentDocId}.png`);
-                    
-                    // Converte base64 para Blob para upload
-                    const blob = await (await fetch(dataURL)).blob();
-                    const snapshot = await signatureRef.put(blob);
-                    const signatureUrl = await snapshot.ref.getDownloadURL();
-                    
-                    // 3. Salva a URL e metadados no Firestore
-                    await db.collection('signatures').doc(studentDocId).set({
-                        studentId: studentDocId,
-                        signerName: signerName,
-                        signatureUrl: signatureUrl,
-                        clerkName: getCurrentClerkName(),
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    
-                    // 4. Atualiza o dado do aluno (signerName)
-                    await db.collection('students').doc(studentDocId).update({ signerName: signerName });
+                const newQty = parseInt(inputEl.value, 10);
+                const success = await saveDelivery(studentDocId, matId, requiredQty, newQty, inputEl, remainingEl, false);
+                
+                this.disabled = false;
+                this.textContent = 'Salvar';
 
-                    alert('Assinatura salva com sucesso!');
-                    this.textContent = 'Assinatura Salva';
-
-                    // Desabilita a edição após salvar
-                    signaturePadInstance.off();
-                    $('signerName').disabled = true;
-                    $('clearSignature').disabled = true;
-                    this.disabled = true; 
-                    
-                } catch(e) {
-                    console.error('Erro ao salvar assinatura:', e);
-                    alert('Erro ao salvar assinatura: ' + (e.message || e));
-                } finally {
-                    // Se deu erro, reabilita o botão
-                    if(this.textContent !== 'Assinatura Salva') {
-                        this.disabled = false;
-                        this.textContent = 'Salvar Assinatura & Conferente';
-                    }
+                if (success) {
+                    // Feedback visual temporário de sucesso
+                    const originalBg = item.style.backgroundColor;
+                    item.style.backgroundColor = 'var(--success-light)';
+                    setTimeout(() => {
+                        item.style.backgroundColor = originalBg;
+                    }, 300);
                 }
             });
-        }
-    });
-
-    // 7. Listeners para os itens de entrega
-    listArea.querySelectorAll('.checklist-item').forEach(item => {
-        const inputEl = item.querySelector('.delivery-input');
-        const remainingEl = item.querySelector('.remaining-qty');
-        const saveBtn = item.querySelector('.save-delivery-btn');
-        const matId = inputEl.dataset.matid;
-        const requiredQty = parseInt(inputEl.dataset.required, 10);
-
-        // Listener para o input de mudança de valor
-        inputEl.addEventListener('input', function() {
-            const newQty = parseInt(this.value, 10);
-            const delivered = Math.min(newQty, requiredQty);
-            const remaining = requiredQty - delivered;
-            
-            remainingEl.textContent = remaining;
-            remainingEl.style.color = remaining > 0 ? 'var(--danger)' : 'var(--success)';
         });
 
-        // Listener para o botão Salvar
-        saveBtn.addEventListener('click', async function(){
+        // 9. Listener para o botão "Marcar Todos"
+        $('markCompleteBtn').addEventListener('click', async function(){
+            if(!confirm('Tem certeza que deseja marcar TODOS os materiais como ENTREGUES (Qtd. Entregue = Qtd. Necessária)?')) return;
+            
             this.disabled = true;
-            this.textContent = '...';
-            
-            const newQty = parseInt(inputEl.value, 10);
-            
-            const success = await saveDelivery(studentDocId, matId, requiredQty, newQty, inputEl, remainingEl, false);
-            
-            this.disabled = false;
-            this.textContent = 'Salvar';
-            
-            if (success) {
-                // Feedback visual temporário de sucesso
-                const originalBg = item.style.backgroundColor;
-                item.style.backgroundColor = 'var(--success-light)';
-                setTimeout(() => {
-                    item.style.backgroundColor = originalBg;
-                }, 300);
-            }
-        });
-    });
+            this.textContent = 'Marcando...';
 
-    // 8. Listener para o botão "Marcar Todos"
-    $('markCompleteBtn').addEventListener('click', async function(){
-        if(!confirm('Tem certeza que deseja marcar TODOS os materiais como ENTREGUES (Qtd. Entregue = Qtd. Necessária)?')) return;
-        
-        this.disabled = true;
-        this.textContent = 'Marcando...';
-
-        try {
-            const savePromises = [];
-            listArea.querySelectorAll('.checklist-item').forEach(item => {
+            const items = listArea.querySelectorAll('.checklist-item');
+            const promises = [];
+            let successCount = 0;
+            
+            for (const item of items) {
                 const inputEl = item.querySelector('.delivery-input');
                 const remainingEl = item.querySelector('.remaining-qty');
                 const matId = inputEl.dataset.matid;
                 const requiredQty = parseInt(inputEl.dataset.required, 10);
                 
-                // Força o valor do input para a quantidade requerida
-                inputEl.value = requiredQty;
-
-                // Salva (em batch, mas usando a função que atualiza o display)
-                savePromises.push(saveDelivery(studentDocId, matId, requiredQty, requiredQty, inputEl, remainingEl, true));
-
-                // Feedback visual imediato (sem esperar o save)
-                item.style.backgroundColor = 'var(--success-light)';
-                setTimeout(() => { item.style.backgroundColor = ''; }, 500);
-            });
-
-            await Promise.all(savePromises);
+                // Define o valor do input para o máximo
+                inputEl.value = requiredQty; 
+                
+                // Salva a entrega
+                const success = await saveDelivery(studentDocId, matId, requiredQty, requiredQty, inputEl, remainingEl, true);
+                if (success) {
+                    successCount++;
+                    remainingEl.textContent = 0;
+                    remainingEl.style.color = 'var(--success)';
+                }
+            }
             
-            loadDashboardData(); // Atualiza o dashboard após o batch
-
-            this.textContent = 'Completo!';
-            setTimeout(() => {
-                this.textContent = 'Marcar Todos como Entregues';
-                this.disabled = false;
-            }, 1000);
-
-        } catch(e) {
-            console.error('Erro ao marcar todos:', e);
-            alert('Erro ao marcar todos como entregues.');
-            this.textContent = 'Marcar Todos como Entregues';
             this.disabled = false;
-        }
-    });
+            this.textContent = 'Marcar Todos como Entregues';
+            alert(`${successCount} de ${items.length} itens marcados como entregues!`);
 
+        });
+
+    }catch(err){
+        console.error('Erro openStudent', err);
+        modal.innerHTML = `<div class="checklist-modal-box" style="padding: 20px;">
+            <h3 style="color:var(--danger)">Erro ao carregar Checklist</h3>
+            <div class="small">${err.message || 'Ocorreu um erro desconhecido.'}</div>
+            <button class="btn secondary" style="margin-top: 15px;" onclick="document.getElementById('checklist-modal').classList.remove('visible'); document.body.style.overflow = '';">Fechar</button>
+        </div>`;
+        modal.classList.add('visible');
+    }
 }
 
+
 /* ---------------------------
-   IMPRESSÃO SIMPLIFICADA (Para PDF/Etiqueta)
+   QR & PRINT (TAB)
    --------------------------- */
 
+// Gerar QRs
+$('btnGenerateQRs').addEventListener('click', async function(){
+    if(!db) return alert('Firestore não inicializado.');
+    
+    const classId = $('qrClassSelect').value;
+    if(!classId) return alert('Selecione uma turma para gerar os QRs.');
+    
+    this.disabled = true;
+    this.textContent = 'Gerando...';
+
+    const gallery = $('qrGallery');
+    gallery.innerHTML = '';
+
+    try {
+        const studentsSnap = await db.collection('students').where('classId', '==', classId).orderBy('name').get();
+
+        if(studentsSnap.empty){
+            gallery.innerHTML = '<div class="small" style="grid-column: 1 / -1;">Nenhum aluno encontrado nesta turma.</div>';
+            return;
+        }
+
+        studentsSnap.forEach(d => {
+            const s = d.data();
+            const studentId = d.id;
+            const qrUrl = getStudentQRUrl(studentId, 'print'); // Usando modo 'print' para abrir o documento simplificado
+            
+            // Cria um contêiner para cada QR Code
+            const qrContainer = document.createElement('div');
+            qrContainer.style = 'border: 1px solid var(--border-color); padding: 10px; border-radius: var(--radius); text-align: center; background: var(--card);';
+            qrContainer.innerHTML = `
+                <div style="font-weight: 600; font-size: 14px; margin-bottom: 5px;">${s.name}</div>
+                <div id="qr-${studentId}" style="width:120px; height:120px; margin: 0 auto;"></div>
+                <div class="small">${s.studentId || 'N/A'}</div>
+                <button class="btn secondary" style="padding: 6px 10px; font-size:12px; margin-top: 8px;" onclick="downloadQRCode('${studentId}', '${s.name.replace(/'/g, "\\'")}')">Download PNG</button>
+            `;
+            gallery.appendChild(qrContainer);
+            
+            // Renderiza o QR Code usando a biblioteca QRCode.js
+            new QRCode(document.getElementById(`qr-${studentId}`), {
+                text: qrUrl,
+                width: 120,
+                height: 120,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        });
+
+    } catch(err) {
+        console.error('Erro ao gerar QR', err);
+        gallery.innerHTML = '<div class="small" style="grid-column: 1 / -1; color:var(--danger)">Erro ao gerar QRs: ' + (err.message || err) + '</div>';
+    } finally {
+        this.disabled = false;
+        this.textContent = 'Gerar QRs';
+    }
+});
+
+function downloadQRCode(studentId, studentName) {
+    const qrDiv = document.getElementById(`qr-${studentId}`);
+    const canvas = qrDiv.querySelector('canvas');
+    const img = qrDiv.querySelector('img'); // Em alguns navegadores (IE/Edge) pode usar <img>
+
+    let dataURL;
+    if (canvas) {
+        dataURL = canvas.toDataURL("image/png");
+    } else if (img) {
+        dataURL = img.src;
+    } else {
+        alert('Não foi possível encontrar a imagem do QR Code.');
+        return;
+    }
+
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = `QR_${studentName.replace(/ /g, '_')}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+
 /**
- * Gera o documento simplificado (sem interação) para impressão/visualização rápida.
- * * @param {string} studentDocId - O ID do documento do aluno no Firestore.
+ * Gera um documento de checklist pronto para impressão em uma nova janela.
+ * @param {string} studentDocId - O ID do documento do aluno no Firestore.
  */
 async function generatePrintableChecklist(studentDocId){
     if(!db) return alert('Firestore não inicializado');
@@ -2007,6 +2077,7 @@ async function generatePrintableChecklist(studentDocId){
         }
     }
 
+
     // 2. Fetch Class Materials
     const matsnap = await db.collection('materials').where('classId','==',s.classId).get();
     
@@ -2015,16 +2086,6 @@ async function generatePrintableChecklist(studentDocId){
     const deliveredQuantities = {};
     deliveriesSnap.forEach(d=> deliveredQuantities[d.data().materialId] = d.data().quantityDelivered || 0);
 
-    // 4. Fetch Signature
-    const signatureSnap = await db.collection('signatures').doc(studentDocId).get();
-    const signatureData = signatureSnap.exists ? signatureSnap.data() : null;
-    const signatureImageHtml = signatureData?.signatureUrl 
-        ? `<img class="signature-image" src="${signatureData.signatureUrl}" alt="Assinatura do Responsável" />`
-        : '<div class="signature-image" style="background:#fef2f2; border: 1px solid var(--danger);">SEM ASSINATURA</div>';
-    const signerName = signatureData?.signerName || 'Nome do Responsável';
-    const clerkName = signatureData?.clerkName || 'Nome do Conferente';
-    
-    // 5. Monta a Lista
     const materialsArray = [];
     matsnap.forEach(m=> materialsArray.push({id:m.id, ...m.data()}));
     materialsArray.sort((a,b)=> (a.name||'').localeCompare(b.name||'')); // Ordena por nome
@@ -2038,150 +2099,76 @@ async function generatePrintableChecklist(studentDocId){
         const missing = required - delivered;
         if(missing > 0) totalMissing += missing;
         
-        const status = missing === 0 ? 'OK' : 'FALTA';
+        const status = missing === 0 ? 'COMPLETO' : (delivered > 0 ? 'INCOMPLETO' : 'PENDENTE');
         const statusColor = missing === 0 ? 'var(--success)' : 'var(--danger)';
 
         checklistHtml += `
-            <div class="material-item-doc" style="border-left: 4px solid ${missing === 0 ? 'var(--success)' : 'var(--danger)'};">
-                <div style="flex:3; font-size: 13px;">${m.name}</div>
-                <div style="flex:1; text-align:center; font-weight: bold;">${required}</div>
-                <div style="flex:1; text-align:center; font-weight: bold;">${delivered}</div>
-                <div style="flex:1; text-align:center; color:${statusColor}; font-weight: bold;">${missing}</div>
+            <div class="material-item-doc" style="font-size: 14px;">
+                <div style="flex:1; width: 40%;">${m.name}</div>
+                <div style="width: 15%; text-align: center;">${required}</div>
+                <div style="width: 15%; text-align: center;">${delivered}</div>
+                <div style="width: 15%; text-align: center; color: ${statusColor}; font-weight: 600;">${missing}</div>
+                <div style="width: 15%; text-align: center;">${status}</div>
             </div>
         `;
     });
+
+    // 4. Constrói o HTML da nova janela
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
     
-    const missingColor = totalMissing > 0 ? 'var(--danger)' : 'var(--success)';
+    const signatureImageHtml = s.signatureDataURL 
+        ? `<img class="signature-image" src="${s.signatureDataURL}" alt="Assinatura Salva"/>`
+        : `<div class="signature-image" style="display:flex; align-items:center; justify-content:center; font-size:12px; color:#888;">Área de Assinatura (Física)</div>`;
+    
+    const signatureInfo = s.signatureDataURL 
+        ? `Entregue em: ${new Date(s.signatureTimestamp.toDate()).toLocaleDateString('pt-BR')}`
+        : ``;
 
-
-    // 6. Monta o Documento
-    const printableContent = `
-        <style>
-            /* Estilos para o documento de impressão (oculta o restante da aplicação) */
-            @media screen {
-                body > *:not(#print-doc) { display: none; }
-                body { background: #eee; }
-            }
-            @media print {
-                body { margin: 0; }
-            }
-
-            #print-doc {
-                width: 210mm; /* A4 width */
-                min-height: 297mm; /* A4 height */
-                margin: 0 auto;
-                padding: 20mm;
-                background: white;
-                box-shadow: 0 0 10px rgba(0,0,0,0.1);
-                font-family: 'Inter', sans-serif;
-                color: #333;
-                box-sizing: border-box;
-            }
-            .header-doc { text-align: center; margin-bottom: 25px; }
-            .header-doc h2 { margin: 0 0 5px; color: #2b7cff; font-size: 22px; }
-            .header-doc p { margin: 0; font-size: 12px; color: #666; }
-            .student-info { 
-                border: 1px solid #ccc; 
-                padding: 15px; 
-                margin-bottom: 25px; 
-                border-radius: 4px; 
-                background: #f9f9f9;
-                display: flex;
-                justify-content: space-between;
-            }
-            .student-info div { font-size: 14px; }
-            .student-info strong { font-size: 16px; color: #111; display: block; margin-bottom: 5px;}
-            .student-info span { font-weight: normal; color: #666; }
-            
-            h3 { font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 25px; }
-            
-            .material-list { 
-                border: 1px solid #ccc; 
-                border-radius: 4px; 
-                margin-top: 10px; 
-                overflow: hidden; 
-            }
-            .material-header-doc, .material-item-doc {
-                display: flex;
-                padding: 8px 10px;
-                border-bottom: 1px solid #eee;
-                align-items: center;
-            }
-            .material-header-doc {
-                font-weight: bold;
-                background: #eef4ff;
-                color: #2b7cff;
-                border-bottom: 2px solid #ccc;
-                font-size: 13px;
-            }
-            .material-item-doc:last-child { border-bottom: none; }
-            .material-item-doc > div { overflow: hidden; text-overflow: ellipsis; }
-
-            .signature-area { display: flex; justify-content: space-between; margin-top: 50px; }
-            .signature-block { 
-                display: inline-block; 
-                width: 48%; /* Aumentado um pouco para ocupar mais espaço */
-                vertical-align: top; 
-                text-align: center;
-            }
-            .signature-line {
-                border-top: 1px solid #000;
-                margin-top: 15px; /* Aumentado o espaço para a linha */
-                padding-top: 5px;
-                font-weight: bold;
-                font-size: 14px;
-            }
-            .signature-image {
-                max-width: 100%;
-                max-height: 100px;
-                height: 100px; /* Altura fixa para o bloco da assinatura */
-                border: 1px solid #ccc;
-                object-fit: contain;
-                background: #f9f9f9;
-                margin-bottom: 5px;
-                border-radius: 4px;
-            }
-            .footer-text { margin-top: 30px; text-align: center; font-size: 11px; color: #888; }
-            
-            /* Mídia de Impressão */
-            @media print {
-                #print-doc {
-                    box-shadow: none;
-                    margin: 0;
-                    width: 100%;
-                    min-height: auto;
-                    padding: 0;
+    const fullHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Checklist - ${s.name}</title>
+            <style>
+                body { font-family: 'Inter', sans-serif; margin: 20px; }
+                h1 { font-size: 20px; border-bottom: 2px solid #000; padding-bottom: 5px; }
+                h2 { font-size: 16px; margin-bottom: 5px; }
+                h3 { font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 25px; }
+                .material-list { border: 1px solid #ccc; border-radius: 4px; margin-top: 10px; overflow: hidden; }
+                .material-header-doc, .material-item-doc { display: flex; padding: 8px 10px; border-bottom: 1px solid #eee; align-items: center; }
+                .material-header-doc { font-weight: bold; background: #eef4ff; color: #2b7cff; border-bottom: 2px solid #ccc; }
+                .material-item-doc:last-child { border-bottom: none; }
+                .material-item-doc > div { overflow: hidden; text-overflow: ellipsis; }
+                .signature-area { display: flex; justify-content: space-between; margin-top: 50px; }
+                .signature-block { display: inline-block; width: 48%; /* Aumentado um pouco para ocupar mais espaço */ vertical-align: top; text-align: center; }
+                .signature-line { border-top: 1px solid #000; margin-top: 15px; /* Aumentado o espaço para a linha */ padding-top: 5px; font-weight: bold; }
+                .signature-image { max-width: 100%; max-height: 100px; height: 100px; /* Altura fixa para o bloco da assinatura */ border: 1px solid #ccc; object-fit: contain; background: #f9f9f9; margin-bottom: 5px; }
+                .footer-text { margin-top: 30px; text-align: center; font-size: 11px; color: #888; }
+                /* Mídia de Impressão */ 
+                @media print { 
+                    body { font-size: 12px; margin: 10mm; /* Margens de impressão */ }
+                    .signature-area { margin-top: 30px; }
+                    .signature-line { margin-top: 10px; }
+                    .material-item-doc, .material-header-doc { font-size: 11px; }
                 }
-                body { 
-                    -webkit-print-color-adjust: exact; 
-                    print-color-adjust: exact; 
-                }
-            }
-        </style>
-        <div id="print-doc">
-            <div class="header-doc">
-                <h2>DOCUMENTO DE CONFERÊNCIA DE MATERIAL</h2>
-                <p>Controle de Material Escolar - ${new Date().toLocaleDateString('pt-BR')}</p>
-            </div>
+            </style>
+        </head>
+        <body>
+            <h1>Documento de Entrega de Material Escolar</h1>
             
-            <div class="student-info">
-                <div>
-                    <strong>Aluno: ${s.name}</strong> 
-                    Turma: ${className}
-                </div>
-                <div>
-                    <strong>Matrícula/Nº: ${s.studentId || 'N/A'}</strong>
-                    Status Geral: <span style="font-weight: bold; color: ${missingColor};">${totalMissing === 0 ? 'Entrega Completa' : `Faltam ${totalMissing} Itens`}</span>
-                </div>
-            </div>
+            <h2>Aluno: ${s.name} (${s.studentId || 'N/A'})</h2>
+            <h2>Turma: ${className}</h2>
+            <div style="font-size: 14px; margin-top: 10px;">Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}</div>
+            <div style="font-size: 14px; color: ${totalMissing === 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: 700;">Status: ${totalMissing === 0 ? 'LISTA COMPLETA' : `FALTAM ${totalMissing} ITENS`}</div>
 
-            <h3>Lista de Materiais Requeridos:</h3>
+            <h3>Lista de Materiais</h3>
             <div class="material-list">
                 <div class="material-header-doc">
-                    <div style="flex:3;">Item</div>
-                    <div style="flex:1; text-align:center;">Req.</div>
-                    <div style="flex:1; text-align:center;">Ent.</div>
-                    <div style="flex:1; text-align:center;">Falta</div>
+                    <div style="flex:1; width: 40%;">Item</div>
+                    <div style="width: 15%; text-align: center;">Requerido</div>
+                    <div style="width: 15%; text-align: center;">Entregue</div>
+                    <div style="width: 15%; text-align: center;">Falta</div>
+                    <div style="width: 15%; text-align: center;">Status</div>
                 </div>
                 ${checklistHtml}
             </div>
@@ -2189,216 +2176,144 @@ async function generatePrintableChecklist(studentDocId){
             <div class="signature-area">
                 <div class="signature-block">
                     ${signatureImageHtml}
-                    <div class="signature-line">${signerName}</div>
-                    <p class="small" style="font-size: 12px; margin-top: 5px;">Responsável Legal</p>
+                    <div class="signature-line">
+                        RESPONSÁVEL (${s.signerName || 'Nome não Salvo'})
+                    </div>
+                    <div style="font-size: 12px; margin-top: 5px; color: #888;">${signatureInfo}</div>
                 </div>
                 <div class="signature-block">
-                    <div class="signature-image" style="background:#eee; border: 1px solid #ccc;"></div>
-                    <div class="signature-line">${clerkName}</div>
-                    <p class="small" style="font-size: 12px; margin-top: 5px;">Conferente (Escola)</p>
+                    <div class="signature-image" style="border: 1px dashed #ccc;"></div>
+                    <div class="signature-line">
+                        CONFERENTE (Assinatura física)
+                    </div>
+                    <div style="font-size: 12px; margin-top: 5px; color: #888;">Conferente Salvo: ${s.clerkName || 'N/A'}</div>
                 </div>
             </div>
-            
+
             <div class="footer-text">
-                <p>Este documento comprova a conferência do material escolar na data de emissão. Versão ${new Date().getFullYear()}.</p>
+                Este documento é uma via de conferência e entrega de material escolar. O responsável atesta o recebimento dos itens marcados como 'Entregues'.
             </div>
-            
-        </div>
+        </body>
+        </html>
     `;
 
-    // 7. Renderiza e abre a janela de impressão
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-        printWindow.document.write(printableContent);
-        printWindow.document.close();
-        
-        // Espera um momento antes de imprimir para garantir que o CSS seja aplicado
-        setTimeout(() => {
-            printWindow.print();
-            // Opcional: printWindow.close(); // Fechar após a impressão
-        }, 300); 
-    } else {
-        alert('O navegador bloqueou a abertura da janela de impressão. Verifique as configurações de pop-up.');
-    }
+    printWindow.document.write(fullHtml);
+    printWindow.document.close();
+    printWindow.focus();
+    // printWindow.print(); // Descomente se quiser forçar a abertura da caixa de impressão
+
 }
 
 
 /* ---------------------------
-   GERAR QR CODE
-   --------------------------- */
-
-$('btnGenerateQRs').addEventListener('click', async function(){
-    if(!db) return alert('Firestore não inicializado.');
-
-    const classId = $('qrClassSelect').value;
-    if(!classId) return alert('Selecione uma turma para gerar os QRs.');
-
-    this.disabled = true;
-    this.textContent = 'Gerando...';
-
-    const gallery = $('qrGallery');
-    gallery.innerHTML = '';
-    
-    try {
-        const studentsSnap = await db.collection('students').where('classId', '==', classId).orderBy('name').get();
-        
-        if(studentsSnap.empty){
-            gallery.innerHTML = '<div class="small" style="grid-column: 1 / -1;">Nenhum aluno encontrado nesta turma.</div>';
-            return;
-        }
-
-        studentsSnap.forEach(d => {
-            const s = d.data();
-            const studentId = d.id;
-            
-            // Cria um contêiner para cada QR Code
-            const qrContainer = document.createElement('div');
-            qrContainer.style = 'border: 1px solid var(--border-color); padding: 10px; border-radius: var(--radius); text-align: center; background: var(--card);';
-            qrContainer.innerHTML = `
-                <div style="font-weight: 600; font-size: 14px; margin-bottom: 5px; height: 3em; overflow: hidden;">${s.name}</div>
-                <div id="qr-${studentId}" style="display: inline-block; padding: 10px; background: white; border: 1px solid #ddd;"></div>
-                <div class="small" style="margin-top: 5px;">Nº: ${s.studentId || 'N/A'}</div>
-                <button class="btn secondary download-btn" data-name="${s.name.replace(/\s/g, '_')}_QR" style="padding: 4px 8px; font-size: 10px; margin-top: 8px;">Baixar QR</button>
-            `;
-            gallery.appendChild(qrContainer);
-
-            // Gera o QR Code com a URL do checklist (modo padrão 'checklist')
-            const url = getStudentQRUrl(studentId, 'checklist');
-            new QRCode(document.getElementById(`qr-${studentId}`), {
-                text: url,
-                width: 120,
-                height: 120,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-        });
-        
-        // Adiciona listeners para download
-        document.querySelectorAll('.download-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const name = this.dataset.name;
-                const qrDiv = this.previousElementSibling.previousElementSibling;
-                const img = qrDiv.querySelector('img');
-                
-                if (img) {
-                    const link = document.createElement('a');
-                    link.href = img.src;
-                    link.download = `${name}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                } else {
-                    alert('QR Code ainda não foi renderizado.');
-                }
-            });
-        });
-
-    } catch(err) {
-        console.error('Erro ao gerar QRs', err);
-        gallery.innerHTML = `<div class="small" style="grid-column: 1 / -1; color:var(--danger)">Erro ao gerar QRs: ${err.message || err}</div>`;
-    } finally {
-        this.disabled = false;
-        this.textContent = 'Gerar QRs';
-    }
-});
-
-/* ---------------------------
-   RELATÓRIOS
+   REPORTS (TAB)
    --------------------------- */
 
 $('btnRunReport').addEventListener('click', async function(){
     if(!db) return alert('Firestore não inicializado.');
+    
     const classId = $('reportClass').value;
     if(!classId) return alert('Selecione uma turma para gerar o relatório.');
-
+    
     this.disabled = true;
     this.textContent = 'Gerando...';
 
-    try{
-        // 1. Fetch Students
-        const studentsnap = await db.collection('students').where('classId', '==', classId).orderBy('name').get();
-        
-        // 2. Fetch Materials for the class
-        const materialsnap = await db.collection('materials').where('classId', '==', classId).get();
-        const materialsRequired = {}; // {materialId: quantity}
-        materialsnap.forEach(m => materialsRequired[m.id] = m.data().quantity || 1);
+    try {
+        const [studentsnap, matsnap, deliveriesSnap, classDoc] = await Promise.all([
+            db.collection('students').where('classId', '==', classId).orderBy('name').get(),
+            db.collection('materials').where('classId', '==', classId).get(),
+            db.collection('deliveries').where('classId', '==', classId).get(),
+            db.collection('classes').doc(classId).get()
+        ]);
 
-        if (Object.keys(materialsRequired).length === 0) {
-            $('reportArea').innerHTML = '<div class="small">Nenhum material cadastrado para esta turma.</div>';
+        const className = classDoc.exists ? classDoc.data().name : 'Turma Desconhecida';
+
+        // 1. Mapear materiais e suas quantidades requeridas
+        const requiredMaterials = {}; // { materialId: requiredQty }
+        matsnap.forEach(d => requiredMaterials[d.id] = d.data().quantity || 1);
+        
+        if (matsnap.empty) {
+            $('reportArea').innerHTML = `<div class="small">Nenhum material cadastrado para a turma ${className}.</div>`;
             return;
         }
 
-        // 3. Process data for each student
+        // 2. Mapear entregas por aluno
+        // { studentId: { materialId: deliveredQty } }
+        const studentDeliveries = {};
+        deliveriesSnap.forEach(d => {
+            const data = d.data();
+            if (!studentDeliveries[data.studentId]) studentDeliveries[data.studentId] = {};
+            studentDeliveries[data.studentId][data.materialId] = data.quantityDelivered || 0;
+        });
+        
+        // 3. Calcular faltas por aluno
         const reportData = [];
-        for (const studentDoc of studentsnap.docs) {
-            const s = studentDoc.data();
-            const studentId = studentDoc.id;
-
-            // Fetch deliveries for the student
-            const deliveriesSnap = await db.collection('deliveries').where('studentId', '==', studentId).get();
-            const materialsDelivered = {}; // {materialId: quantityDelivered}
-            deliveriesSnap.forEach(d => materialsDelivered[d.data().materialId] = d.data().quantityDelivered || 0);
-
+        studentsnap.forEach(d => {
+            const s = d.data();
             let totalMissing = 0;
             
-            for (const matId in materialsRequired) {
-                const required = materialsRequired[matId];
-                const delivered = materialsDelivered[matId] || 0;
-                const missing = required - delivered;
-                if (missing > 0) {
-                    totalMissing += missing;
-                }
-            }
+            // Itera sobre todos os materiais requeridos para a turma
+            Object.keys(requiredMaterials).forEach(matId => {
+                const required = requiredMaterials[matId];
+                const delivered = (studentDeliveries[d.id] && studentDeliveries[d.id][matId]) || 0;
+                totalMissing += Math.max(0, required - delivered); // Não pode ser negativo
+            });
 
-            if (totalMissing > 0) {
-                reportData.push({
+            // Apenas alunos com alguma falta ou que ainda não assinaram
+            if (totalMissing > 0 || !s.signatureDataURL) {
+                 reportData.push({
                     name: s.name,
                     studentId: s.studentId || 'N/A',
                     totalMissing: totalMissing,
-                    studentDocId: studentId
+                    signed: !!s.signatureDataURL
                 });
             }
-        }
-        
-        this.disabled = false;
-        this.textContent = 'Gerar relatório';
-        
-        if (reportData.length === 0) {
-            $('reportArea').innerHTML = '<div class="small" style="color:var(--success); font-weight: 600;">Excelente! Todos os alunos desta turma estão com 100% dos materiais entregues.</div>';
-            return;
-        }
+        });
 
-        // 4. Render Table
-        const table = document.createElement('table');
-        table.style = 'width: 100%; border-collapse: collapse; margin-top: 15px; background: var(--card); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);';
-        
-        const tableHeader = `
-            <thead>
-                <tr style="background: var(--accent-light);">
-                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid var(--accent);">Aluno</th>
-                    <th style="padding: 10px; text-align: center; border-bottom: 2px solid var(--accent); width: 120px;">Matrícula</th>
-                    <th style="padding: 10px; text-align: center; border-bottom: 2px solid var(--accent); width: 100px;">Total Faltando</th>
-                    <th style="padding: 10px; text-align: center; border-bottom: 2px solid var(--accent); width: 100px;">Ação</th>
-                </tr>
-            </thead>
+        // Ordenar: primeiro os alunos com mais faltas, depois por nome
+        reportData.sort((a, b) => b.totalMissing - a.totalMissing || a.name.localeCompare(b.name));
+
+        // 4. Montar a Tabela
+        let tableHtml = `
+            <table style="width:100%; border-collapse: collapse; margin-top: 15px;">
+                <thead>
+                    <tr style="background: var(--accent-light); color: var(--accent); font-size: 14px;">
+                        <th style="padding: 10px; text-align: left; border: 1px solid #ccc;">Aluno</th>
+                        <th style="padding: 10px; text-align: center; border: 1px solid #ccc; width: 120px;">Matrícula</th>
+                        <th style="padding: 10px; text-align: center; border: 1px solid #ccc; width: 100px;">Faltas (Total)</th>
+                        <th style="padding: 10px; text-align: center; border: 1px solid #ccc; width: 120px;">Assinatura</th>
+                    </tr>
+                </thead>
+                <tbody>
         `;
-        
-        const tableBody = reportData.map(item => {
+
+        reportData.forEach(item => {
             const missingColor = item.totalMissing > 0 ? 'var(--danger)' : 'var(--success)';
-            return `
-                <tr style="border-bottom: 1px solid var(--border-color);">
+            const signedStatus = item.signed ? 'Sim' : 'Não';
+            const signedColor = item.signed ? 'var(--success)' : 'var(--danger)';
+
+            tableHtml += `
+                <tr style="font-size: 14px; border-bottom: 1px solid #eee;">
                     <td style="padding: 10px; text-align: left;">${item.name}</td>
                     <td style="padding: 10px; text-align: center;">${item.studentId}</td>
                     <td style="padding: 10px; text-align: center; color: ${missingColor}; font-weight: 600;">${item.totalMissing}</td>
-                    <td style="padding: 10px; text-align: center;">
-                        <button class="btn secondary" style="padding: 4px 8px; font-size: 11px;" onclick="openStudent('${item.studentDocId}')">Ver Checklist</button>
-                    </td>
+                    <td style="padding: 10px; text-align: center; color: ${signedColor};">${signedStatus}</td>
                 </tr>
             `;
-        }).join('');
+        });
+        
+        tableHtml += `</tbody></table>`;
 
-        table.innerHTML = tableHeader + `<tbody>${tableBody}</tbody>`;
+        // 5. Renderizar
+        $('btnRunReport').disabled = false;
+        $('btnRunReport').textContent = 'Gerar relatório';
+        
+        const table = document.createElement('div');
+        table.className = 'card';
+        table.innerHTML = `
+            <h3 class="section-title" style="margin-top: 0;">Relatório de Faltas - ${className}</h3>
+            ${tableHtml}
+        `;
 
         $('reportArea').innerHTML = ''; // Limpa a área
         

@@ -174,7 +174,7 @@
         border: 1px dashed var(--muted);
         border-radius: 4px;
         width: 100%;
-        height: 150px;
+        height: 220px;
         touch-action: none; /* Necessário para touch events e mouse */
     }
     #signature-preview {
@@ -334,6 +334,7 @@
   .checklist-item { flex-direction: column; align-items: flex-start; gap: 8px; }
   #checklist-list-area { padding: 12px; flex-shrink: 1; }
   #signature-area { padding: 12px; flex-shrink: 0; }
+  #signature-canvas { height: 240px; }
 }
   </style>
 </head>
@@ -665,6 +666,20 @@ function showTab(name){
   const menuItem = document.querySelector('#menu .nav-item[data-tab="'+name+'"]');
   if(menuItem) menuItem.classList.add('active');
 
+
+  // Carregamentos por aba (garante que listas apareçam ao entrar na tela)
+  if(name === 'materials'){
+      loadClassesList();
+      const moc = $('materialsOfClass');
+      if(moc) moc.innerHTML = '<div class="small">Clique em "Abrir" em uma turma ao lado.</div>';
+  }
+  if(name === 'import'){
+      loadClassesSelects();
+  }
+  if(name === 'students'){
+      loadStudentsList($('studentsFilterClass') ? $('studentsFilterClass').value : null);
+  }
+
   // FECHA o menu hambúrguer após a navegação em mobile
   if(window.innerWidth <= 992) {
       toggleMenu(false);
@@ -752,6 +767,7 @@ if(auth){
                 await Promise.all([
                     loadClassesSelects(), 
                     loadDashboardData(),
+                    loadClassesList(),
                     // Tenta carregar a lista de alunos para pré-preencher
                     loadStudentsList($('studentsFilterClass') ? $('studentsFilterClass').value : null) 
                 ]);
@@ -1268,16 +1284,19 @@ async function loadMaterialsOfClass(classId){
 
     // Desativa a aba atual e marca a nova
     document.querySelectorAll('#classesList .material-item').forEach(e => e.classList.remove('active'));
-    document.querySelector(`#classesList .material-item button[onclick*="${classId}"]`).closest('.material-item').classList.add('active');
+    const __btn = document.querySelector(`#classesList .material-item button[onclick*="${classId}"]`);
+    if(__btn && __btn.closest('.material-item')) __btn.closest('.material-item').classList.add('active');
 
 
     try{
         const classDoc = await db.collection('classes').doc(classId).get();
         const className = classDoc.exists ? classDoc.data().name : 'Turma Desconhecida';
         
-        const matsnap = await db.collection('materials').where('classId','==',classId).orderBy('name').get();
+        const matsnap = await db.collection('materials').where('classId','==',classId).get();
         const materialsArray = [];
         matsnap.forEach(d => materialsArray.push({id: d.id, ...d.data()}));
+        // Ordena no cliente (evita exigir índice composto no Firestore)
+        materialsArray.sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'pt-BR', {sensitivity:'base'}));
         
         container.innerHTML = `<h4 class="section-title" style="font-size: 18px; margin-top: 0;">Materiais para: ${className}</h4>`;
 
@@ -1619,6 +1638,25 @@ async function saveSignature(studentDocId, dataURL, signerName, clerkName) {
 let signaturePadInstance = null; // Instância global do SignaturePad
 
 /**
+ * Ajusta o canvas da assinatura para ficar nítido em telas retina/tablet (devicePixelRatio)
+ * e manter o tamanho visual definido no CSS.
+ */
+function resizeSignatureCanvas(canvas, pad){
+    if(!canvas) return;
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    const rect = canvas.getBoundingClientRect();
+    // Define resolução interna do canvas
+    canvas.width = Math.round(rect.width * ratio);
+    canvas.height = Math.round(rect.height * ratio);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    // Se já havia assinatura desenhada e você quiser manter, dá pra usar toData()/fromData().
+    // Aqui, priorizamos estabilidade (canvas limpo ao redimensionar).
+    if(pad) pad.clear();
+}
+
+
+/**
  * Abre o modal de checklist de materiais para um aluno específico.
  * Carrega a lista de materiais necessários, o status de entrega e a área de assinatura.
  * @param {string} studentDocId - O ID do documento do aluno no Firestore.
@@ -1795,10 +1833,23 @@ async function openStudent(studentDocId){
         modal.classList.add('visible');
         document.body.style.overflow = 'hidden';
 
+        // Mantém a assinatura nítida ao girar a tela/redimensionar (tablet)
+        const __onResizeSignature = () => {
+            const canvas = $('signature-canvas');
+            if (canvas && signaturePadInstance && $('signature-content') && $('signature-content').style.display === 'block') {
+                resizeSignatureCanvas(canvas, signaturePadInstance);
+            }
+        };
+        window.addEventListener('resize', __onResizeSignature);
+
+
+
+
         // --- 7. Listeners do Modal ---
         $('closeChecklist').addEventListener('click', ()=>{
             modal.classList.remove('visible');
             document.body.style.overflow = '';
+            window.removeEventListener('resize', __onResizeSignature);
             loadStudentsList($('studentsFilterClass').value); // Recarrega a lista para atualizar o status de assinatura
         });
 
@@ -1821,8 +1872,14 @@ async function openStudent(studentDocId){
             if(!hasExistingSignature && !signaturePadInstance && !isVisible) {
                 const canvas = $('signature-canvas');
                 signaturePadInstance = new SignaturePad(canvas, {
-                    backgroundColor: 'rgb(255, 255, 255)' 
+                    backgroundColor: 'rgb(255, 255, 255)',
+                    penColor: 'rgb(17, 24, 39)',
+                    minWidth: 1.2,
+                    maxWidth: 3.2,
+                    throttle: 8,
+                    velocityFilterWeight: 0.7
                 });
+                resizeSignatureCanvas(canvas, signaturePadInstance);
                 canvasControls.style.display = 'block';
                 $('signature-preview-container').style.display = 'none';
             }

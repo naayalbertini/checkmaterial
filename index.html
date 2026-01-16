@@ -364,6 +364,7 @@
         <div class="nav-item" data-tab="materials">Materiais</div>
         <div class="nav-item" data-tab="students">Alunos</div>
         <div class="nav-item" data-tab="qrs">Gerar QR</div>
+        <div class="nav-item" data-tab="distribution">Distribuição (Coletivo)</div>
         <div class="nav-item" data-tab="reports">Relatórios</div>
         <div class="nav-item" data-tab="help">Ajuda</div>
       </nav>
@@ -508,6 +509,86 @@
           <div id="qrGallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:15px"></div>
         </div>
 
+
+
+        <div id="distribution" class="tab" style="display:none">
+          <h2 class="section-title">Distribuição de Material (Uso Coletivo)</h2>
+          <div class="small">Controle de retirada por aluno (limite do que trouxe) e por turma (saldo coletivo). Tudo fica registrado no histórico.</div>
+          <div style="height:12px"></div>
+
+          <div class="card" style="margin-bottom:16px;">
+            <div class="row" style="gap:12px; flex-wrap: wrap;">
+              <div style="flex:1; min-width: 220px;">
+                <div class="small">Turma</div>
+                <select id="distClassSelect" class="input"></select>
+              </div>
+
+              <div style="flex:1; min-width: 220px;">
+                <div class="small">Material</div>
+                <select id="distMaterialSelect" class="input"><option value="">Escolha a turma primeiro</option></select>
+              </div>
+
+              <div style="flex:1; min-width: 220px;">
+                <div class="small">Tipo de retirada</div>
+                <select id="distWithdrawType" class="input">
+                  <option value="student">Aluno (mandado por professor)</option>
+                  <option value="teacher">Professor(a) retirando para a turma</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="distStudentBlock" style="margin-top:12px;">
+              <div class="row" style="gap:12px; flex-wrap: wrap;">
+                <div style="flex:1; min-width: 280px;">
+                  <div class="small">Aluno</div>
+                  <select id="distStudentSelect" class="input"><option value="">Escolha a turma primeiro</option></select>
+                </div>
+                <div style="flex:1; min-width: 280px;">
+                  <div class="small">Professor(a) que mandou</div>
+                  <input id="distTeacherRequester" class="input" placeholder="Ex: Prof. Ana" />
+                </div>
+              </div>
+            </div>
+
+            <div id="distTeacherBlock" style="margin-top:12px; display:none;">
+              <div class="row" style="gap:12px; flex-wrap: wrap;">
+                <div style="flex:1; min-width: 280px;">
+                  <div class="small">Professor(a) que retirou</div>
+                  <input id="distTeacherName" class="input" placeholder="Ex: Prof. Carla" />
+                </div>
+              </div>
+            </div>
+
+            <div class="row" style="gap:12px; flex-wrap: wrap; margin-top:12px;">
+              <div style="flex:1; min-width: 220px;">
+                <div class="small">Quantidade solicitada</div>
+                <input id="distQtyRequested" type="number" class="input" min="1" value="1" />
+              </div>
+              <div style="flex:2; min-width: 320px;">
+                <div class="small">Prévia de saldo</div>
+                <div id="distPreview" class="hint small">Selecione turma + material para ver o saldo.</div>
+              </div>
+              <div style="display:flex; gap:10px; align-items:flex-end;">
+                <button id="distBtnApprove" class="btn">Confirmar retirada</button>
+                <button id="distBtnSync" class="btn secondary">Sincronizar saldo da turma</button>
+              </div>
+            </div>
+
+            <div id="distMsg" class="small" style="margin-top:10px; color: var(--danger);"></div>
+          </div>
+
+          <div class="row" style="gap:16px; align-items:flex-start; flex-wrap: wrap;">
+            <div class="card" style="flex:1; min-width: 320px;">
+              <div class="section-title" style="font-size:16px">Saldo atual</div>
+              <div id="distBalances" class="small">Selecione turma + material.</div>
+            </div>
+
+            <div class="card" style="flex:2; min-width: 360px;">
+              <div class="section-title" style="font-size:16px">Últimas retiradas</div>
+              <div id="distHistory" class="small">Selecione uma turma para ver o histórico.</div>
+            </div>
+          </div>
+        </div>
         <div id="reports" class="tab" style="display:none">
           <h2 class="section-title">Relatórios</h2>
           <div class="small">Relatório rápido: contagem total de itens que faltam por aluno na turma selecionada.</div>
@@ -678,6 +759,9 @@ function showTab(name){
   }
   if(name === 'students'){
       loadStudentsList($('studentsFilterClass') ? $('studentsFilterClass').value : null);
+  }
+  if(name === 'distribution'){
+      initDistributionTab();
   }
 
   // FECHA o menu hambúrguer após a navegação em mobile
@@ -1169,7 +1253,7 @@ $('btnSaveMaterials').addEventListener('click', async function(){
 // Carrega Turmas para os <select>
 async function loadClassesSelects(){
     if(!db) return;
-    const selects = [$('targetClass'), $('studentClass'), $('studentsFilterClass'), $('qrClassSelect'), $('reportClass')];
+    const selects = [$('targetClass'), $('studentClass'), $('studentsFilterClass'), $('qrClassSelect'), $('reportClass'), $('distClassSelect')];
     try{
         const snap = await db.collection('classes').orderBy('name').get();
         const optionsHtml = ['<option value="">Escolha a turma</option>'];
@@ -1197,6 +1281,661 @@ async function loadClassesSelects(){
     }catch(err){
         console.error('Erro loadClassesSelects', err);
     }
+}
+
+
+/* ---------------------------
+   ESTOQUE COLETIVO / DISTRIBUIÇÃO (NOVO)
+   Collections:
+   - student_stock (doc: studentId_materialId) => qtyBrought
+   - student_withdraw_agg (doc: studentId_materialId) => qtyWithdrawn
+   - class_stock (doc: classId_materialId) => qtyTotalBrought, qtyTotalWithdrawn
+   - withdrawals (logs)
+   --------------------------- */
+
+function fmtNum(n){
+  const x = Number(n || 0);
+  return isNaN(x) ? 0 : x;
+}
+
+function stockDocId(a,b){
+  return String(a||'').trim() + '_' + String(b||'').trim();
+}
+
+async function updateStockFromDeliveryDiff(studentId, classId, materialId, diff){
+  if(!db || !diff) return;
+  const sRef = db.collection('student_stock').doc(stockDocId(studentId, materialId));
+  const cRef = db.collection('class_stock').doc(stockDocId(classId, materialId));
+
+  await db.runTransaction(async (tx) => {
+    const [sSnap, cSnap] = await Promise.all([tx.get(sRef), tx.get(cRef)]);
+    const sData = sSnap.exists ? sSnap.data() : { qtyBrought: 0 };
+    const cData = cSnap.exists ? cSnap.data() : { qtyTotalBrought: 0, qtyTotalWithdrawn: 0 };
+
+    const newStudent = Math.max(0, fmtNum(sData.qtyBrought) + diff);
+    const newClass = Math.max(0, fmtNum(cData.qtyTotalBrought) + diff);
+
+    tx.set(sRef, {
+      studentId,
+      classId,
+      materialId,
+      qtyBrought: newStudent,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    tx.set(cRef, {
+      classId,
+      materialId,
+      qtyTotalBrought: newClass,
+      qtyTotalWithdrawn: fmtNum(cData.qtyTotalWithdrawn),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  });
+}
+
+let distInitialized = false;
+
+async function initDistributionTab(){
+  if(!db) return;
+  await loadClassesSelects();
+
+  if(distInitialized){
+    await distRefreshAll();
+    return;
+  }
+  distInitialized = true;
+
+  const typeSel = $('distWithdrawType');
+  const classSel = $('distClassSelect');
+  const materialSel = $('distMaterialSelect');
+  const studentSel = $('distStudentSelect');
+  const qtyInp = $('distQtyRequested');
+
+  function toggleBlocks(){
+    const v = typeSel.value;
+    $('distStudentBlock').style.display = (v === 'student') ? '' : 'none';
+    $('distTeacherBlock').style.display = (v === 'teacher') ? '' : 'none';
+  }
+
+  typeSel.addEventListener('change', async () => {
+    toggleBlocks();
+    await distUpdatePreview();
+  });
+
+  classSel.addEventListener('change', async () => {
+    await distLoadMaterialsAndStudents();
+    await distLoadHistory();
+    await distUpdatePreview();
+  });
+
+  materialSel.addEventListener('change', distUpdatePreview);
+  studentSel.addEventListener('change', distUpdatePreview);
+  qtyInp.addEventListener('input', distUpdatePreview);
+
+  $('distBtnApprove').addEventListener('click', distApproveClicked);
+  $('distBtnSync').addEventListener('click', distSyncClicked);
+
+  toggleBlocks();
+  await distLoadMaterialsAndStudents();
+  await distLoadHistory();
+  await distUpdatePreview();
+}
+
+async function distRefreshAll(){
+  await distLoadMaterialsAndStudents();
+  await distLoadHistory();
+  await distUpdatePreview();
+}
+
+async function distLoadMaterialsAndStudents(){
+  const classId = $('distClassSelect').value;
+  const materialSel = $('distMaterialSelect');
+  const studentSel = $('distStudentSelect');
+
+  if(!classId){
+    materialSel.innerHTML = '<option value="">Escolha uma turma</option>';
+    studentSel.innerHTML = '<option value="">Escolha a turma primeiro</option>';
+    return;
+  }
+
+  // Materiais (lista da turma)
+  materialSel.innerHTML = '<option value="">Carregando materiais...</option>';
+  try{
+    const snap = await db.collection('materials').where('classId','==',classId).orderBy('name').get();
+    if(snap.empty){
+      materialSel.innerHTML = '<option value="">Nenhum material cadastrado nesta turma</option>';
+    } else {
+      const opts = ['<option value="">Selecione o material</option>'];
+      snap.forEach(d=>{
+        const m = d.data();
+        opts.push(`<option value="${d.id}">${m.name}</option>`);
+      });
+      materialSel.innerHTML = opts.join('');
+    }
+  }catch(err){
+    console.error('distLoadMaterials error', err);
+    materialSel.innerHTML = '<option value="">Erro ao carregar materiais</option>';
+  }
+
+  // Alunos da turma
+  studentSel.innerHTML = '<option value="">Carregando alunos...</option>';
+  try{
+    const snapS = await db.collection('students').where('classId','==',classId).orderBy('name').get();
+    if(snapS.empty){
+      studentSel.innerHTML = '<option value="">Nenhum aluno cadastrado</option>';
+    } else {
+      const optsS = ['<option value="">Selecione o aluno</option>'];
+      snapS.forEach(d=>{
+        const s = d.data();
+        optsS.push(`<option value="${d.id}">${s.name}</option>`);
+      });
+      studentSel.innerHTML = optsS.join('');
+    }
+  }catch(err){
+    console.error('distLoadStudents error', err);
+    studentSel.innerHTML = '<option value="">Erro ao carregar alunos</option>';
+  }
+}
+
+async function distGetBalances(classId, materialId, studentId){
+  // Primeiro tenta ler os agregados (mais rápido). Se não existir, faz fallback calculando de deliveries/withdrawals.
+  const cRef = db.collection('class_stock').doc(stockDocId(classId, materialId));
+  const sRef = studentId ? db.collection('student_stock').doc(stockDocId(studentId, materialId)) : null;
+  const aRef = studentId ? db.collection('student_withdraw_agg').doc(stockDocId(studentId, materialId)) : null;
+
+  const [cSnap, sSnap, aSnap] = await Promise.all([
+    cRef.get(),
+    sRef ? sRef.get() : Promise.resolve(null),
+    aRef ? aRef.get() : Promise.resolve(null)
+  ]);
+
+  let classBrought = 0;
+  let classWithdrawn = 0;
+  let studentBrought = 0;
+  let studentWithdrawn = 0;
+
+  if(cSnap.exists){
+    const c = cSnap.data() || {};
+    classBrought = fmtNum(c.qtyTotalBrought);
+    classWithdrawn = fmtNum(c.qtyTotalWithdrawn);
+  }
+
+  if(studentId){
+    if(sSnap && sSnap.exists){
+      const s = sSnap.data() || {};
+      studentBrought = fmtNum(s.qtyBrought);
+    }
+    if(aSnap && aSnap.exists){
+      const a = aSnap.data() || {};
+      studentWithdrawn = fmtNum(a.qtyWithdrawn);
+    }
+  }
+
+  // Fallback se ainda estiver zerado (ex.: registros antigos sem class_stock/student_stock)
+  // Class brought: soma deliveries do material filtrando por turma (mesmo se delivery antigo não tiver classId)
+  if(classBrought === 0){
+    const delSnap = await db.collection('deliveries').where('materialId','==',materialId).get();
+    let total = 0;
+    const needStudentClassLookup = [];
+    delSnap.forEach(d=>{
+      const x = d.data() || {};
+      if(x.classId){
+        if(x.classId === classId) total += fmtNum(x.quantityDelivered);
+      } else if(x.studentId){
+        needStudentClassLookup.push({ studentId: x.studentId, qty: fmtNum(x.quantityDelivered) });
+      }
+    });
+    if(needStudentClassLookup.length){
+      const uniq = Array.from(new Set(needStudentClassLookup.map(i=>i.studentId)));
+      const chunks = [];
+      while(uniq.length) chunks.push(uniq.splice(0, 10));
+      const classMap = {};
+      for(const part of chunks){
+        const snaps = await Promise.all(part.map(id=>db.collection('students').doc(id).get()));
+        snaps.forEach(s=>{ if(s.exists) classMap[s.id] = (s.data()||{}).classId || null; });
+      }
+      needStudentClassLookup.forEach(i=>{ if(classMap[i.studentId] === classId) total += i.qty; });
+    }
+    classBrought = total;
+  }
+
+  // Class withdrawn: soma withdrawals
+  if(classWithdrawn === 0){
+    const wSnap = await db.collection('withdrawals')
+      .where('classId','==',classId)
+      .where('materialId','==',materialId)
+      .get();
+    let totalW = 0;
+    wSnap.forEach(d=> totalW += fmtNum((d.data()||{}).qtyApproved));
+    classWithdrawn = totalW;
+  }
+
+  // Student brought: soma deliveries do aluno/material
+  if(studentId && studentBrought === 0){
+    const ds = await db.collection('deliveries')
+      .where('studentId','==',studentId)
+      .where('materialId','==',materialId)
+      .get();
+    let sb = 0;
+    ds.forEach(d=> sb += fmtNum((d.data()||{}).quantityDelivered));
+    studentBrought = sb;
+  }
+
+  // Student withdrawn: soma withdrawals do aluno/material
+  if(studentId && studentWithdrawn === 0){
+    const ws = await db.collection('withdrawals')
+      .where('withdrawType','==','student')
+      .where('studentId','==',studentId)
+      .where('materialId','==',materialId)
+      .get();
+    let sw = 0;
+    ws.forEach(d=> sw += fmtNum((d.data()||{}).qtyApproved));
+    studentWithdrawn = sw;
+  }
+
+  const classRemaining = classBrought - classWithdrawn;
+  const studentRemaining = studentBrought - studentWithdrawn;
+
+  return {
+    class: { brought: classBrought, withdrawn: classWithdrawn, remaining: classRemaining },
+    student: { brought: studentBrought, withdrawn: studentWithdrawn, remaining: studentRemaining }
+  };
+}
+
+async function distUpdatePreview(){
+  const msg = $('distMsg');
+  msg.textContent = '';
+
+  const classId = $('distClassSelect').value;
+  const materialId = $('distMaterialSelect').value;
+  const type = $('distWithdrawType').value;
+  const studentId = (type === 'student') ? $('distStudentSelect').value : null;
+  const qtyRequested = Math.max(0, parseInt($('distQtyRequested').value || '0', 10));
+
+  if(!classId || !materialId){
+    $('distPreview').textContent = 'Selecione turma + material para ver o saldo.';
+    $('distBalances').innerHTML = '<div class="small">Selecione turma + material.</div>';
+    return;
+  }
+
+  try{
+    const balances = await distGetBalances(classId, materialId, studentId);
+    const classRem = balances.class.remaining;
+    const studentRem = (type === 'student') ? balances.student.remaining : null;
+
+    let qtyApproved = 0;
+    if(type === 'student') qtyApproved = Math.max(0, Math.min(qtyRequested, classRem, studentRem));
+    else qtyApproved = Math.max(0, Math.min(qtyRequested, classRem));
+
+    $('distPreview').innerHTML = `Pode liberar agora: <strong>${qtyApproved}</strong> (solicitado: ${qtyRequested})`;
+
+    const balLines = [];
+    balLines.push(`<div><strong>Turma</strong>: trouxe ${balances.class.brought} | retirado ${balances.class.withdrawn} | <strong>saldo ${classRem}</strong></div>`);
+    if(type === 'student'){
+      balLines.push(`<div><strong>Aluno</strong>: trouxe ${balances.student.brought} | retirado ${balances.student.withdrawn} | <strong>saldo ${studentRem}</strong></div>`);
+    }
+
+    $('distBalances').innerHTML = balLines.join('');
+
+  }catch(err){
+    console.error('distUpdatePreview error', err);
+    $('distPreview').textContent = 'Erro ao calcular saldo. Veja console.';
+  }
+}
+
+async function distApproveClicked(){
+  const btn = $('distBtnApprove');
+  const msg = $('distMsg');
+  msg.style.color = 'var(--danger)';
+  msg.textContent = '';
+
+  const classId = $('distClassSelect').value;
+  const materialId = $('distMaterialSelect').value;
+  const type = $('distWithdrawType').value;
+  const qtyRequested = Math.max(0, parseInt($('distQtyRequested').value || '0', 10));
+
+  if(!classId) return msg.textContent = 'Selecione uma turma.';
+  if(!materialId) return msg.textContent = 'Selecione um material.';
+  if(!qtyRequested || qtyRequested <= 0) return msg.textContent = 'Informe uma quantidade válida.';
+
+  const clerkName = getCurrentClerkName();
+
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+
+  try{
+    if(type === 'student'){
+      const studentId = $('distStudentSelect').value;
+      const teacherRequesterName = $('distTeacherRequester').value.trim();
+      if(!studentId) throw new Error('Selecione o aluno.');
+
+      const sDoc = await db.collection('students').doc(studentId).get();
+      const studentName = sDoc.exists ? (sDoc.data().name || 'Aluno') : 'Aluno';
+
+      const result = await approveWithdrawalStudentV2({
+        classId, studentId, studentName,
+        materialId, qtyRequested,
+        teacherRequesterName,
+        clerkName
+      });
+
+      msg.style.color = 'var(--success)';
+      msg.textContent = `Retirada registrada. Liberado: ${result.qtyApproved}.`;
+    } else {
+      const teacherName = $('distTeacherName').value.trim();
+      if(!teacherName) throw new Error('Informe o nome do professor(a).');
+
+      const result = await approveWithdrawalTeacherV2({
+        classId,
+        materialId,
+        qtyRequested,
+        teacherName,
+        clerkName
+      });
+
+      msg.style.color = 'var(--success)';
+      msg.textContent = `Retirada registrada. Liberado: ${result.qtyApproved}.`;
+    }
+
+    await distLoadHistory();
+    await distUpdatePreview();
+
+  }catch(err){
+    msg.style.color = 'var(--danger)';
+    msg.textContent = err.message || String(err);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Confirmar retirada';
+  }
+}
+
+async function approveWithdrawalStudentV2({
+  classId, studentId, studentName,
+  materialId, qtyRequested,
+  teacherRequesterName,
+  clerkName
+}){
+  const classStockRef = db.collection('class_stock').doc(stockDocId(classId, materialId));
+  const studentStockRef = db.collection('student_stock').doc(stockDocId(studentId, materialId));
+  const studentAggRef = db.collection('student_withdraw_agg').doc(stockDocId(studentId, materialId));
+
+  return db.runTransaction(async (tx) => {
+    const [classSnap, studentStockSnap, studentAggSnap] = await Promise.all([
+      tx.get(classStockRef),
+      tx.get(studentStockRef),
+      tx.get(studentAggRef)
+    ]);
+
+    const classData = classSnap.exists ? classSnap.data() : { qtyTotalBrought: 0, qtyTotalWithdrawn: 0 };
+    const studentStock = studentStockSnap.exists ? studentStockSnap.data() : { qtyBrought: 0 };
+    const studentAgg = studentAggSnap.exists ? studentAggSnap.data() : { qtyWithdrawn: 0 };
+
+    const classRemaining = fmtNum(classData.qtyTotalBrought) - fmtNum(classData.qtyTotalWithdrawn);
+    const studentRemaining = fmtNum(studentStock.qtyBrought) - fmtNum(studentAgg.qtyWithdrawn);
+
+    const qtyApproved = Math.max(0, Math.min(qtyRequested, classRemaining, studentRemaining));
+    if(qtyApproved <= 0) throw new Error('Sem saldo para liberar (aluno ou turma).');
+
+    tx.set(classStockRef, {
+      classId,
+      materialId,
+      qtyTotalBrought: fmtNum(classData.qtyTotalBrought),
+      qtyTotalWithdrawn: fmtNum(classData.qtyTotalWithdrawn) + qtyApproved,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    tx.set(studentAggRef, {
+      studentId,
+      classId,
+      materialId,
+      qtyWithdrawn: fmtNum(studentAgg.qtyWithdrawn) + qtyApproved,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    const wRef = db.collection('withdrawals').doc();
+    tx.set(wRef, {
+      classId,
+      materialId,
+      qtyRequested,
+      qtyApproved,
+      withdrawType: 'student',
+      studentId,
+      studentName,
+      teacherRequesterName: teacherRequesterName || null,
+      clerkName: clerkName || 'Secretaria',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    return { qtyApproved };
+  });
+}
+
+async function approveWithdrawalTeacherV2({
+  classId,
+  materialId,
+  qtyRequested,
+  teacherName,
+  clerkName
+}){
+  const classStockRef = db.collection('class_stock').doc(stockDocId(classId, materialId));
+
+  return db.runTransaction(async (tx) => {
+    const classSnap = await tx.get(classStockRef);
+    const classData = classSnap.exists ? classSnap.data() : { qtyTotalBrought: 0, qtyTotalWithdrawn: 0 };
+
+    const classRemaining = fmtNum(classData.qtyTotalBrought) - fmtNum(classData.qtyTotalWithdrawn);
+    const qtyApproved = Math.max(0, Math.min(qtyRequested, classRemaining));
+    if(qtyApproved <= 0) throw new Error('Sem saldo da turma para liberar.');
+
+    tx.set(classStockRef, {
+      classId,
+      materialId,
+      qtyTotalBrought: fmtNum(classData.qtyTotalBrought),
+      qtyTotalWithdrawn: fmtNum(classData.qtyTotalWithdrawn) + qtyApproved,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    const wRef = db.collection('withdrawals').doc();
+    tx.set(wRef, {
+      classId,
+      materialId,
+      qtyRequested,
+      qtyApproved,
+      withdrawType: 'teacher',
+      teacherName: teacherName || 'Professor(a)',
+      clerkName: clerkName || 'Secretaria',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    return { qtyApproved };
+  });
+}
+
+async function distLoadHistory(){
+  const classId = $('distClassSelect').value;
+  const area = $('distHistory');
+  if(!classId){
+    area.innerHTML = '<div class="small">Selecione uma turma para ver o histórico.</div>';
+    return;
+  }
+
+  area.innerHTML = '<div class="small">Carregando...</div>';
+
+  try{
+    let snap;
+    try {
+      // Query ideal (pode exigir índice composto em alguns projetos)
+      snap = await db.collection('withdrawals')
+        .where('classId','==',classId)
+        .orderBy('timestamp','desc')
+        .limit(25)
+        .get();
+    } catch(qErr){
+      // Fallback sem orderBy (evita travar se faltar índice). Ordena no cliente.
+      console.warn('distLoadHistory: fallback sem orderBy (possível falta de índice):', qErr);
+      snap = await db.collection('withdrawals')
+        .where('classId','==',classId)
+        .limit(100)
+        .get();
+    }
+
+    if(snap.empty){
+      area.innerHTML = '<div class="small">Nenhuma retirada registrada ainda.</div>';
+      return;
+    }
+
+    // Carrega nomes dos materiais para mostrar
+    const materialIds = []
+    snap.forEach(d=>{ const data=d.data(); if(data.materialId) materialIds.push(data.materialId); });
+    const uniqueMat = Array.from(new Set(materialIds)).slice(0,30);
+    const matMap = {};
+    await Promise.all(uniqueMat.map(async (mid)=>{
+      try{
+        const ms = await db.collection('materials').doc(mid).get();
+        matMap[mid] = ms.exists ? (ms.data().name || mid) : mid;
+      }catch(e){
+        matMap[mid] = mid;
+      }
+    }));
+
+    const docs = [];
+    snap.forEach(d=> docs.push({ id: d.id, ...((d.data()||{})) }));
+    docs.sort((a,b)=>{
+      const ta = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate().getTime() : 0;
+      const tb = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate().getTime() : 0;
+      return tb - ta;
+    });
+
+    const rows = [];
+    docs.slice(0,25).forEach(w=>{
+      const when = w.timestamp && w.timestamp.toDate ? w.timestamp.toDate() : null;
+      const dt = when ? when.toLocaleString('pt-BR') : '';
+      const matName = matMap[w.materialId] || w.materialId;
+      if(w.withdrawType === 'student'){
+        rows.push(`<div class="material-item" style="align-items:flex-start; gap:12px;">
+          <div style="flex:1;">
+            <strong>${w.studentName || 'Aluno'}</strong>
+            <div class="small">Material: ${matName} | Mandado por: ${w.teacherRequesterName || '—'}</div>
+            <div class="small">Solicitado: ${fmtNum(w.qtyRequested)} | Liberado: <strong>${fmtNum(w.qtyApproved)}</strong></div>
+          </div>
+          <div class="small" style="min-width:160px; text-align:right;">${dt}</div>
+        </div>`);
+      } else {
+        rows.push(`<div class="material-item" style="align-items:flex-start; gap:12px;">
+          <div style="flex:1;">
+            <strong>${w.teacherName || 'Professor(a)'}</strong>
+            <div class="small">Material: ${matName}</div>
+            <div class="small">Solicitado: ${fmtNum(w.qtyRequested)} | Liberado: <strong>${fmtNum(w.qtyApproved)}</strong></div>
+          </div>
+          <div class="small" style="min-width:160px; text-align:right;">${dt}</div>
+        </div>`);
+      }
+    });
+
+    area.innerHTML = rows.join('');
+
+  }catch(err){
+    console.error('distLoadHistory error', err);
+    area.innerHTML = `<div class="small" style="color:var(--danger)">Erro ao carregar histórico: ${String(err && err.message ? err.message : err)}</div>`;
+  }
+}
+
+async function distSyncClicked(){
+  const msg = $('distMsg');
+  msg.style.color = 'var(--danger)';
+  msg.textContent = '';
+
+  const classId = $('distClassSelect').value;
+  const materialId = $('distMaterialSelect').value;
+  if(!classId) return msg.textContent = 'Selecione uma turma para sincronizar.';
+  if(!materialId) return msg.textContent = 'Selecione um material para sincronizar.';
+
+  const btn = $('distBtnSync');
+  btn.disabled = true;
+  btn.textContent = 'Sincronizando...';
+
+  try{
+    // soma total trazido (deliveries)
+    // Fallback para registros antigos sem classId no delivery: consulta por materialId e cruza com turma do aluno.
+    const snap = await db.collection('deliveries')
+      .where('materialId','==',materialId)
+      .get();
+
+    let total = 0;
+    const perStudent = {};
+    const needStudentClassLookup = [];
+    snap.forEach(d=>{
+      const x = d.data() || {};
+      const q = fmtNum(x.quantityDelivered);
+
+      if(x.classId){
+        if(x.classId === classId){
+          total += q;
+          if(x.studentId) perStudent[x.studentId] = (perStudent[x.studentId] || 0) + q;
+        }
+      } else if(x.studentId) {
+        needStudentClassLookup.push({ studentId: x.studentId, qty: q });
+      }
+    });
+
+    if(needStudentClassLookup.length){
+      const uniq = Array.from(new Set(needStudentClassLookup.map(i=>i.studentId)));
+      const chunks = [];
+      while(uniq.length) chunks.push(uniq.splice(0, 10));
+      const classMap = {};
+      for(const part of chunks){
+        const snaps = await Promise.all(part.map(id=>db.collection('students').doc(id).get()));
+        snaps.forEach(s=>{ if(s.exists) classMap[s.id] = (s.data()||{}).classId || null; });
+      }
+      needStudentClassLookup.forEach(i=>{
+        if(classMap[i.studentId] === classId){
+          total += i.qty;
+          perStudent[i.studentId] = (perStudent[i.studentId] || 0) + i.qty;
+        }
+      });
+    }
+
+    // Atualiza class_stock
+    const classRef = db.collection('class_stock').doc(stockDocId(classId, materialId));
+    await db.runTransaction(async (tx)=>{
+      const cSnap = await tx.get(classRef);
+      const cData = cSnap.exists ? cSnap.data() : { qtyTotalWithdrawn: 0 };
+      tx.set(classRef, {
+        classId,
+        materialId,
+        qtyTotalBrought: total,
+        qtyTotalWithdrawn: fmtNum(cData.qtyTotalWithdrawn),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    });
+
+    // Atualiza student_stock (best-effort, em batch)
+    const batch = db.batch();
+    Object.keys(perStudent).forEach(sid=>{
+      const sRef = db.collection('student_stock').doc(stockDocId(sid, materialId));
+      batch.set(sRef, {
+        studentId: sid,
+        classId,
+        materialId,
+        qtyBrought: perStudent[sid],
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    });
+    await batch.commit();
+
+    msg.style.color = 'var(--success)';
+    msg.textContent = 'Sincronização concluída com base nas entregas (checklist).';
+
+    await distUpdatePreview();
+
+  }catch(err){
+    console.error('distSync error', err);
+    msg.style.color = 'var(--danger)';
+    msg.textContent = 'Erro ao sincronizar: ' + (err.message || err);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Sincronizar saldo da turma';
+  }
 }
 
 
@@ -1569,6 +2308,9 @@ async function saveDelivery(studentId, materialId, requiredQty, newQty, inputEl,
         .where('materialId', '==', materialId)
         .limit(1).get();
 
+    const prevQty = existingDeliverySnap.empty ? 0 : (existingDeliverySnap.docs[0].data().quantityDelivered || 0);
+    const classIdCache = $('studentClassIdCache').value;
+
     try{
         if(existingDeliverySnap.empty){
             // 2. Não existe, cria um novo
@@ -1597,6 +2339,15 @@ async function saveDelivery(studentId, materialId, requiredQty, newQty, inputEl,
             remainingEl.textContent = remaining;
             remainingEl.style.color = remaining > 0 ? 'var(--danger)' : 'var(--success)';
             // Nenhuma notificação de sucesso se for lote, para não travar
+        }
+
+
+        // Atualiza estoque coletivo/individual com base na diferença desta entrega
+        try {
+            const diff = qtyToSave - prevQty;
+            if(diff !== 0) await updateStockFromDeliveryDiff(studentId, classIdCache, materialId, diff);
+        } catch(e) {
+            console.warn('Aviso: não foi possível atualizar estoque (student_stock/class_stock):', e);
         }
 
         return true;
@@ -1636,6 +2387,28 @@ async function saveSignature(studentDocId, dataURL, signerName, clerkName) {
 }
 
 let signaturePadInstance = null; // Instância global do SignaturePad
+let signaturePadFullscreenInstance = null; // Instância para tela cheia
+let signatureFSResizeHandler = null; // Handler para resize no modo tela cheia
+
+function undoSignaturePad(pad){
+    if(!pad) return;
+    const data = pad.toData();
+    if(data && data.length){
+        data.pop();
+        pad.fromData(data);
+    }
+}
+
+// Em alguns tablets/celulares, o scroll do modal pode "roubar" o gesto do dedo.
+// Isso força o canvas a capturar o toque (sem travar o resto da página).
+function preventScrollOnCanvas(canvas){
+    if(!canvas) return;
+    const opts = { passive: false };
+    const stop = (e)=>{ try{ e.preventDefault(); } catch(_){} };
+    canvas.addEventListener('touchstart', stop, opts);
+    canvas.addEventListener('touchmove', stop, opts);
+    canvas.addEventListener('touchend', stop, opts);
+}
 
 /**
  * Ajusta o canvas da assinatura para ficar nítido em telas retina/tablet (devicePixelRatio)
@@ -1643,6 +2416,13 @@ let signaturePadInstance = null; // Instância global do SignaturePad
  */
 function resizeSignatureCanvas(canvas, pad){
     if(!canvas) return;
+    // Preserva o desenho ao redimensionar (principalmente em tablet ao girar a tela)
+    // IMPORTANTÍSSIMO: SignaturePad perde o conteúdo quando o canvas muda de tamanho.
+    let prevData = null;
+    try {
+        if(pad && !pad.isEmpty()) prevData = pad.toData();
+    } catch(e) { prevData = null; }
+
     const ratio = Math.max(window.devicePixelRatio || 1, 1);
     const rect = canvas.getBoundingClientRect();
     // Define resolução interna do canvas
@@ -1650,9 +2430,14 @@ function resizeSignatureCanvas(canvas, pad){
     canvas.height = Math.round(rect.height * ratio);
     const ctx = canvas.getContext('2d');
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    // Se já havia assinatura desenhada e você quiser manter, dá pra usar toData()/fromData().
-    // Aqui, priorizamos estabilidade (canvas limpo ao redimensionar).
-    if(pad) pad.clear();
+
+    if(pad){
+        pad.clear();
+        // Restaura strokes anteriores após resize
+        if(prevData && prevData.length){
+            try { pad.fromData(prevData); } catch(e) { /* ignora */ }
+        }
+    }
 }
 
 
@@ -1819,10 +2604,33 @@ async function openStudent(studentDocId){
                     <div class="row" style="margin-top: 5px;">
                         <input id="signerName" class="input" placeholder="Nome Completo do Responsável" value="${s.signerName || ''}" ${hasExistingSignature ? 'disabled' : ''}/>
                     </div>
+                    <div class="row" style="margin-top: 8px; gap:8px; flex-wrap:wrap;">
+                        <button id="openSignatureFullscreen" class="btn secondary" style="flex:1; min-width: 180px;" ${hasExistingSignature ? 'disabled' : ''}>Assinar em tela cheia</button>
+                        <button id="undoSignature" class="btn secondary" style="width: 110px;" ${hasExistingSignature ? 'disabled' : ''}>Desfazer</button>
+                    </div>
                     <div class="row" style="margin-top: 8px;">
                         <button id="clearSignature" class="btn secondary" style="width: 100px;">Limpar</button>
                         <button id="saveSignature" class="btn" style="flex:1;" ${hasExistingSignature ? 'disabled' : ''}>Salvar Assinatura & Conferente</button>
                     </div>
+                </div>
+                <div id="signatureFullscreen" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:99999;">
+                  <div style="position:absolute; inset:12px; background:white; border-radius:12px; display:flex; flex-direction:column; overflow:hidden;">
+                    <div style="padding:12px 14px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                      <div>
+                        <div style="font-weight:700;">Assinatura (tela cheia)</div>
+                        <div class="small">Use o dedo/caneta. Se errar, use Desfazer ou Limpar.</div>
+                      </div>
+                      <div style="display:flex; gap:8px;">
+                        <button id="fsUndo" class="btn secondary">Desfazer</button>
+                        <button id="fsClear" class="btn secondary">Limpar</button>
+                        <button id="fsClose" class="btn secondary">Fechar</button>
+                        <button id="fsUse" class="btn">Usar assinatura</button>
+                      </div>
+                    </div>
+                    <div style="flex:1; padding:12px;">
+                      <canvas id="signature-canvas-full" style="width:100%; height:100%; border:1px solid var(--border-color); border-radius:10px; touch-action:none;"></canvas>
+                    </div>
+                  </div>
                 </div>
                 <div class="small" style="margin-top: 10px;">Conferente atual: <strong>${currentClerkName}</strong></div>
             </div> 
@@ -1879,6 +2687,7 @@ async function openStudent(studentDocId){
                     throttle: 8,
                     velocityFilterWeight: 0.7
                 });
+                preventScrollOnCanvas(canvas);
                 resizeSignatureCanvas(canvas, signaturePadInstance);
                 canvasControls.style.display = 'block';
                 $('signature-preview-container').style.display = 'none';
@@ -1888,6 +2697,81 @@ async function openStudent(studentDocId){
         // Limpar Assinatura
         if($('clearSignature')) $('clearSignature').addEventListener('click', ()=>{
             if(signaturePadInstance) signaturePadInstance.clear();
+        });
+
+        // Desfazer (no canvas pequeno)
+        if($('undoSignature')) $('undoSignature').addEventListener('click', ()=>{
+            undoSignaturePad(signaturePadInstance);
+        });
+
+        // Tela cheia (melhor no tablet)
+        const openFSBtn = $('openSignatureFullscreen');
+        if(openFSBtn) openFSBtn.addEventListener('click', ()=>{
+            if(!signaturePadInstance) {
+                // Se ainda não inicializou, força abrir assinatura e inicializar
+                if(signatureContent.style.display !== 'block') toggleBtn.click();
+            }
+            const overlay = $('signatureFullscreen');
+            const cFull = $('signature-canvas-full');
+            if(!overlay || !cFull) return;
+
+            overlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+
+            // Inicializa pad de tela cheia
+            signaturePadFullscreenInstance = new SignaturePad(cFull, {
+                backgroundColor: 'rgb(255, 255, 255)',
+                penColor: 'rgb(17, 24, 39)',
+                minWidth: 2.0,
+                maxWidth: 4.6,
+                throttle: 8,
+                velocityFilterWeight: 0.7
+            });
+            preventScrollOnCanvas(cFull);
+            resizeSignatureCanvas(cFull, signaturePadFullscreenInstance);
+
+            // Copia strokes do canvas pequeno (se houver)
+            try {
+                if(signaturePadInstance && !signaturePadInstance.isEmpty()){
+                    const data = signaturePadInstance.toData();
+                    signaturePadFullscreenInstance.fromData(data);
+                }
+            } catch(e) { /* ignora */ }
+
+            // Botões do fullscreen
+            const closeFS = () => {
+                overlay.style.display = 'none';
+                // remove listener de resize do fullscreen
+                if(signatureFSResizeHandler){
+                    window.removeEventListener('resize', signatureFSResizeHandler);
+                    signatureFSResizeHandler = null;
+                }
+            };
+
+            if($('fsClose')) $('fsClose').onclick = closeFS;
+            if($('fsClear')) $('fsClear').onclick = ()=> signaturePadFullscreenInstance && signaturePadFullscreenInstance.clear();
+            if($('fsUndo')) $('fsUndo').onclick = ()=> undoSignaturePad(signaturePadFullscreenInstance);
+            if($('fsUse')) $('fsUse').onclick = ()=>{
+                if(!signaturePadFullscreenInstance || signaturePadFullscreenInstance.isEmpty()){
+                    alert('Faça a assinatura antes de usar.');
+                    return;
+                }
+                // Joga a assinatura de volta para o canvas pequeno
+                try {
+                    const data = signaturePadFullscreenInstance.toData();
+                    signaturePadInstance.clear();
+                    signaturePadInstance.fromData(data);
+                } catch(e) {}
+                closeFS();
+            };
+
+            // Ajusta ao rotacionar
+            signatureFSResizeHandler = () => {
+                if(overlay.style.display === 'block' && signaturePadFullscreenInstance){
+                    resizeSignatureCanvas(cFull, signaturePadFullscreenInstance);
+                }
+            };
+            window.addEventListener('resize', signatureFSResizeHandler);
         });
 
         // Salvar Assinatura
@@ -2188,6 +3072,10 @@ async function generatePrintableChecklist(studentDocId){
             <title>Checklist - ${s.name}</title>
             <style>
                 body { font-family: 'Inter', sans-serif; margin: 20px; }
+                #printBar { position:fixed; top:0; left:0; right:0; background:#fff; border-bottom:1px solid #ddd; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; z-index:9999; }
+                #printBar button { padding:10px 14px; font-size:14px; border:1px solid #2b7cff; background:#2b7cff; color:#fff; border-radius:8px; }
+                #printBar .hint { font-size:12px; color:#555; }
+                .printSpacer { height:60px; }
                 h1 { font-size: 20px; border-bottom: 2px solid #000; padding-bottom: 5px; }
                 h2 { font-size: 16px; margin-bottom: 5px; }
                 h3 { font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 25px; }
@@ -2203,6 +3091,7 @@ async function generatePrintableChecklist(studentDocId){
                 .footer-text { margin-top: 30px; text-align: center; font-size: 11px; color: #888; }
                 /* Mídia de Impressão */ 
                 @media print { 
+                    #printBar, .printSpacer { display:none !important; }
                     body { font-size: 12px; margin: 10mm; /* Margens de impressão */ }
                     .signature-area { margin-top: 30px; }
                     .signature-line { margin-top: 10px; }
@@ -2211,6 +3100,11 @@ async function generatePrintableChecklist(studentDocId){
             </style>
         </head>
         <body>
+            <div id="printBar">
+              <div class="hint">Abra e toque em <strong>Imprimir</strong> (melhor no tablet/celular).</div>
+              <button onclick="window.print()">Imprimir</button>
+            </div>
+            <div class="printSpacer"></div>
             <h1>Documento de Entrega de Material Escolar</h1>
             
             <h2>Aluno: ${s.name} (${s.studentId || 'N/A'})</h2>

@@ -1600,6 +1600,52 @@ async function distGetBalances(classId, materialId, studentId){
   };
 }
 
+
+// Garante que os saldos agregados existam antes de descontar.
+// Isso corrige casos em que o aluno já trouxe material em registros antigos,
+// mas ainda não existia o documento student_stock/class_stock usado pela retirada.
+async function ensureStockBeforeWithdrawal(classId, materialId, studentId){
+  if(!db || !classId || !materialId) return;
+  const balances = await distGetBalances(classId, materialId, studentId || null);
+
+  const classRef = db.collection('class_stock').doc(stockDocId(classId, materialId));
+  const classSnap = await classRef.get();
+  if(!classSnap.exists){
+    await classRef.set({
+      classId,
+      materialId,
+      qtyTotalBrought: Math.max(0, fmtNum(balances.class.brought)),
+      qtyTotalWithdrawn: Math.max(0, fmtNum(balances.class.withdrawn)),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }
+
+  if(studentId){
+    const studentRef = db.collection('student_stock').doc(stockDocId(studentId, materialId));
+    const aggRef = db.collection('student_withdraw_agg').doc(stockDocId(studentId, materialId));
+    const [studentSnap, aggSnap] = await Promise.all([studentRef.get(), aggRef.get()]);
+
+    if(!studentSnap.exists){
+      await studentRef.set({
+        studentId,
+        classId,
+        materialId,
+        qtyBrought: Math.max(0, fmtNum(balances.student.brought)),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+
+    if(!aggSnap.exists){
+      await aggRef.set({
+        studentId,
+        classId,
+        materialId,
+        qtyWithdrawn: Math.max(0, fmtNum(balances.student.withdrawn)),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+  }
+}
 async function distUpdatePreview(){
   const msg = $('distMsg');
   msg.textContent = '';
@@ -1726,6 +1772,10 @@ async function approveWithdrawalStudentV2({
   clerkName,
   mode = 'student'
 }){
+  // Antes de descontar, sincroniza automaticamente o saldo do aluno/turma
+  // caso ele tenha sido lançado no checklist antes da criação do controle de retirada.
+  await ensureStockBeforeWithdrawal(classId, materialId, studentId);
+
   const classStockRef = db.collection('class_stock').doc(stockDocId(classId, materialId));
   const studentStockRef = db.collection('student_stock').doc(stockDocId(studentId, materialId));
   const studentAggRef = db.collection('student_withdraw_agg').doc(stockDocId(studentId, materialId));
@@ -1750,7 +1800,7 @@ async function approveWithdrawalStudentV2({
 
     if(qtyApproved <= 0){
       if(mode === 'student_class') throw new Error('Sem saldo da turma para liberar. Confira as entregas ou clique em Sincronizar saldo.');
-      throw new Error('Sem saldo no próprio aluno para esse material. Se ele veio pegar material coletivo da turma, selecione: Aluno retirando material da turma.');
+      throw new Error('Sem saldo no próprio aluno para esse material. O sistema tentou sincronizar automaticamente; confira se esse material foi lançado no checklist desse aluno. Se ele veio pegar material coletivo, selecione: Aluno retirando material da turma.');
     }
 
     tx.set(classStockRef, {
@@ -1906,7 +1956,10 @@ async function distLoadHistory(){
             <div class="small">Quantidade retirada: <strong>${fmtNum(w.qtyApproved)}</strong> ${fmtNum(w.qtyRequested) !== fmtNum(w.qtyApproved) ? `(solicitado ${fmtNum(w.qtyRequested)})` : ''}</div>
             ${w.observation ? `<div class="small"><strong>Observação:</strong> ${w.observation}</div>` : ''}
           </div>
-          <div class="small" style="min-width:160px; text-align:right;">${dt}</div>
+          <div class="small" style="min-width:160px; text-align:right;">
+            <div>${dt}</div>
+            <button class="btn secondary" style="background:var(--danger);color:white;padding:6px 10px;font-size:12px;margin-top:8px;" onclick="excluirRetirada('${w.id}')">Excluir</button>
+          </div>
         </div>`);
       } else {
         rows.push(`<div class="material-item" style="align-items:flex-start; gap:12px;">
@@ -1916,7 +1969,10 @@ async function distLoadHistory(){
             <div class="small">Quantidade retirada: <strong>${fmtNum(w.qtyApproved)}</strong> ${fmtNum(w.qtyRequested) !== fmtNum(w.qtyApproved) ? `(solicitado ${fmtNum(w.qtyRequested)})` : ''}</div>
             ${w.teacherNote ? `<div class="small">Obs.: ${w.teacherNote}</div>` : ''}
           </div>
-          <div class="small" style="min-width:160px; text-align:right;">${dt}</div>
+          <div class="small" style="min-width:160px; text-align:right;">
+            <div>${dt}</div>
+            <button class="btn secondary" style="background:var(--danger);color:white;padding:6px 10px;font-size:12px;margin-top:8px;" onclick="excluirRetirada('${w.id}')">Excluir</button>
+          </div>
         </div>`);
       }
     });
@@ -1926,6 +1982,66 @@ async function distLoadHistory(){
   }catch(err){
     console.error('distLoadHistory error', err);
     area.innerHTML = `<div class="small" style="color:var(--danger)">Erro ao carregar histórico: ${String(err && err.message ? err.message : err)}</div>`;
+  }
+}
+
+async function excluirRetirada(withdrawId){
+  if(!db) return alert('Firestore não inicializado.');
+  if(!withdrawId) return alert('Registro inválido.');
+  if(!confirm('Deseja realmente excluir essa retirada? O saldo será devolvido automaticamente.')) return;
+
+  try{
+    const wRef = db.collection('withdrawals').doc(withdrawId);
+
+    await db.runTransaction(async (tx)=>{
+      const wSnap = await tx.get(wRef);
+      if(!wSnap.exists) throw new Error('Registro de retirada não encontrado.');
+
+      const data = wSnap.data() || {};
+      const qty = fmtNum(data.qtyApproved);
+      if(qty <= 0) throw new Error('Quantidade da retirada inválida.');
+
+      if(data.classId && data.materialId){
+        const classRef = db.collection('class_stock').doc(stockDocId(data.classId, data.materialId));
+        const classSnap = await tx.get(classRef);
+        const classData = classSnap.exists ? (classSnap.data() || {}) : {};
+        const currentWithdrawn = fmtNum(classData.qtyTotalWithdrawn);
+
+        tx.set(classRef, {
+          classId: data.classId,
+          materialId: data.materialId,
+          qtyTotalWithdrawn: Math.max(0, currentWithdrawn - qty),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+
+      // Se a retirada foi do saldo próprio do aluno, devolve também no controle individual.
+      // Retirada do saldo coletivo da turma (student_class) não mexe no saldo individual do aluno.
+      if(data.withdrawType === 'student' && data.studentId && data.materialId){
+        const studentRef = db.collection('student_withdraw_agg').doc(stockDocId(data.studentId, data.materialId));
+        const studentSnap = await tx.get(studentRef);
+        const studentData = studentSnap.exists ? (studentSnap.data() || {}) : {};
+        const currentStudentWithdrawn = fmtNum(studentData.qtyWithdrawn);
+
+        tx.set(studentRef, {
+          studentId: data.studentId,
+          classId: data.classId || null,
+          materialId: data.materialId,
+          qtyWithdrawn: Math.max(0, currentStudentWithdrawn - qty),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+
+      tx.delete(wRef);
+    });
+
+    alert('Retirada excluída e saldo devolvido com sucesso!');
+    await distLoadHistory();
+    await distUpdatePreview();
+
+  }catch(err){
+    console.error('Erro ao excluir retirada:', err);
+    alert('Erro ao excluir retirada: ' + (err.message || err));
   }
 }
 

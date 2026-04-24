@@ -585,6 +585,11 @@
               </div>
             </div>
 
+            <div style="margin-top:12px;">
+              <div class="small">Observação da retirada / troca</div>
+              <textarea id="distObservation" class="input" rows="2" placeholder="Ex: O aluno pegou 2 pacotes de bola, mas só tinha direito a 1. Trocamos 1 pote de tinta por 1 pacote de bola."></textarea>
+            </div>
+
             <div id="distMsg" class="small" style="margin-top:10px; color: var(--danger);"></div>
           </div>
 
@@ -601,13 +606,51 @@
           </div>
         </div>
         <div id="reports" class="tab" style="display:none">
-          <h2 class="section-title">Relatórios</h2>
-          <div class="small">Relatório rápido: contagem total de itens que faltam por aluno na turma selecionada.</div>
+          <h2 class="section-title">Relatórios e PDFs</h2>
+          <div class="small">Gere relatórios para impressão/PDF: retiradas por data e documento individual com saldo de cada aluno.</div>
           <div style="height:12px"></div>
-          <div class="row">
-            <select id="reportClass" class="input"></select>
-            <button id="btnRunReport" class="btn" style="min-width: 120px;">Gerar relatório</button>
+
+          <div class="card" style="margin-bottom:16px;">
+            <div class="section-title" style="font-size:16px;">PDF de retiradas por data</div>
+            <div class="small">Mostra tudo que foi liberado para alunos ou retirado por professores, com data, horário, material, quantidade, responsável e conferente.</div>
+            <div style="height:10px"></div>
+            <div class="row" style="gap:12px; flex-wrap:wrap; align-items:flex-end;">
+              <div style="flex:1; min-width:220px;">
+                <div class="small">Turma</div>
+                <select id="reportClass" class="input"></select>
+              </div>
+              <div style="flex:1; min-width:160px;">
+                <div class="small">Data inicial</div>
+                <input id="reportStartDate" type="date" class="input" />
+              </div>
+              <div style="flex:1; min-width:160px;">
+                <div class="small">Data final</div>
+                <input id="reportEndDate" type="date" class="input" />
+              </div>
+              <button id="btnWithdrawalsPdf" class="btn" style="min-width:170px;">Abrir PDF de retiradas</button>
+            </div>
           </div>
+
+          <div class="card" style="margin-bottom:16px;">
+            <div class="section-title" style="font-size:16px;">Documento do aluno</div>
+            <div class="small">Abre um documento individual mostrando o que o aluno trouxe, o que já foi retirado e o que ainda tem de saldo.</div>
+            <div style="height:10px"></div>
+            <div class="row" style="gap:12px; flex-wrap:wrap; align-items:flex-end;">
+              <div style="flex:1; min-width:220px;">
+                <div class="small">Aluno</div>
+                <select id="reportStudentSelect" class="input"><option value="">Selecione uma turma primeiro</option></select>
+              </div>
+              <button id="btnStudentBalancePdf" class="btn" style="min-width:190px;">Abrir documento do aluno</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title" style="font-size:16px;">Relatório rápido de faltas</div>
+            <div class="small">Contagem total de itens que faltam por aluno na turma selecionada.</div>
+            <div style="height:12px"></div>
+            <button id="btnRunReport" class="btn" style="min-width: 120px;">Gerar relatório de faltas</button>
+          </div>
+
           <div id="reportArea" style="margin-top:20px" class="flex-col"></div>
         </div>
 
@@ -773,6 +816,9 @@ function showTab(name){
   }
   if(name === 'distribution'){
       initDistributionTab();
+  }
+  if(name === 'reports'){
+      loadClassesSelects().then(()=> loadReportStudents());
   }
 
   // FECHA o menu hambúrguer após a navegação em mobile
@@ -1375,6 +1421,7 @@ async function initDistributionTab(){
 
   classSel.addEventListener('change', async () => {
     await distLoadMaterialsAndStudents();
+    if($('distObservation')) $('distObservation').value = '';
     await distLoadHistory();
     await distUpdatePreview();
   });
@@ -1613,6 +1660,7 @@ async function distApproveClicked(){
   if(!qtyRequested || qtyRequested <= 0) return msg.textContent = 'Informe uma quantidade válida.';
 
   const clerkName = getCurrentClerkName();
+  const observation = $('distObservation') ? $('distObservation').value.trim() : '';
 
   btn.disabled = true;
   btn.textContent = 'Salvando...';
@@ -1630,6 +1678,7 @@ async function distApproveClicked(){
         classId, studentId, studentName,
         materialId, qtyRequested,
         teacherRequesterName,
+        observation,
         clerkName,
         mode: type
       });
@@ -1649,6 +1698,7 @@ async function distApproveClicked(){
         teacherName,
         responsibleTeacherName,
         teacherNote,
+        observation,
         clerkName
       });
 
@@ -1672,6 +1722,7 @@ async function approveWithdrawalStudentV2({
   classId, studentId, studentName,
   materialId, qtyRequested,
   teacherRequesterName,
+  observation,
   clerkName,
   mode = 'student'
 }){
@@ -1730,6 +1781,7 @@ async function approveWithdrawalStudentV2({
       studentId,
       studentName,
       teacherRequesterName: teacherRequesterName || null,
+      observation: observation || null,
       clerkName: clerkName || 'Secretaria',
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -1745,6 +1797,7 @@ async function approveWithdrawalTeacherV2({
   teacherName,
   responsibleTeacherName,
   teacherNote,
+  observation,
   clerkName
 }){
   const classStockRef = db.collection('class_stock').doc(stockDocId(classId, materialId));
@@ -1775,6 +1828,7 @@ async function approveWithdrawalTeacherV2({
       teacherName: teacherName || 'Professor(a)',
       responsibleTeacherName: responsibleTeacherName || null,
       teacherNote: teacherNote || null,
+      observation: observation || null,
       clerkName: clerkName || 'Secretaria',
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -1850,6 +1904,7 @@ async function distLoadHistory(){
             <div class="small">${w.withdrawType === 'student_class' ? 'Retirou do saldo coletivo da turma' : 'Retirou do próprio saldo'} | Material: ${matName}</div>
             <div class="small">Autorizado por: ${w.teacherRequesterName || '—'} | Lançado por: ${w.clerkName || '—'}</div>
             <div class="small">Quantidade retirada: <strong>${fmtNum(w.qtyApproved)}</strong> ${fmtNum(w.qtyRequested) !== fmtNum(w.qtyApproved) ? `(solicitado ${fmtNum(w.qtyRequested)})` : ''}</div>
+            ${w.observation ? `<div class="small"><strong>Observação:</strong> ${w.observation}</div>` : ''}
           </div>
           <div class="small" style="min-width:160px; text-align:right;">${dt}</div>
         </div>`);
@@ -3189,6 +3244,299 @@ async function generatePrintableChecklist(studentDocId){
 
 }
 
+
+
+/* ---------------------------
+   PDF / IMPRESSAO DE RETIRADAS E SALDO DO ALUNO
+   --------------------------- */
+function safeText(v){
+  return String(v == null ? '' : v)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+function formatDateTimeBR(ts){
+  if(!ts) return '';
+  let d = null;
+  if(ts.toDate) d = ts.toDate();
+  else if(ts instanceof Date) d = ts;
+  else d = new Date(ts);
+  if(!d || isNaN(d.getTime())) return '';
+  return d.toLocaleString('pt-BR');
+}
+function formatDateBR(ts){
+  if(!ts) return 'Sem data';
+  let d = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
+  if(!d || isNaN(d.getTime())) return 'Sem data';
+  return d.toLocaleDateString('pt-BR');
+}
+function dateInputToStart(value){
+  if(!value) return null;
+  const d = new Date(value + 'T00:00:00');
+  return isNaN(d.getTime()) ? null : d;
+}
+function dateInputToEnd(value){
+  if(!value) return null;
+  const d = new Date(value + 'T23:59:59');
+  return isNaN(d.getTime()) ? null : d;
+}
+function isWithinDates(ts, start, end){
+  const d = ts && ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts || 0));
+  if(!d || isNaN(d.getTime())) return false;
+  if(start && d < start) return false;
+  if(end && d > end) return false;
+  return true;
+}
+function openPrintDocument(title, bodyHtml){
+  const w = window.open('', '_blank', 'width=1000,height=700');
+  if(!w){
+    alert('O navegador bloqueou a janela. Permita pop-ups para imprimir o relatório.');
+    return;
+  }
+  const html = `<!doctype html><html><head><meta charset="utf-8">
+    <title>${safeText(title)}</title>
+    <style>
+      body{font-family:Arial, sans-serif; margin:24px; color:#111;}
+      #printBar{position:sticky; top:0; background:white; border:1px solid #ddd; padding:10px; display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;}
+      #printBar button{background:#2b7cff;color:white;border:0;border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer;}
+      h1{font-size:22px;margin:0 0 6px 0;border-bottom:2px solid #111;padding-bottom:8px;}
+      h2{font-size:17px;margin:22px 0 8px 0;}
+      .meta{font-size:12px;color:#555;margin-bottom:12px;line-height:1.5;}
+      table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px;}
+      th,td{border:1px solid #ccc;padding:7px;vertical-align:top;}
+      th{background:#eef4ff;color:#1d4ed8;text-align:left;}
+      .right{text-align:right}.center{text-align:center}.muted{color:#666}.ok{color:#15803d;font-weight:700}.bad{color:#dc2626;font-weight:700}
+      .page-break{page-break-before:always;}
+      @media print{#printBar{display:none} body{margin:10mm;} h1{font-size:18px} table{font-size:10.5px} th,td{padding:5px}}
+    </style></head><body>
+    <div id="printBar"><div>Use o botão para imprimir ou salvar em PDF.</div><button onclick="window.print()">Imprimir / Salvar PDF</button></div>
+    ${bodyHtml}
+    </body></html>`;
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+}
+async function loadReportStudents(){
+  if(!db || !$('reportStudentSelect')) return;
+  const classId = $('reportClass') ? $('reportClass').value : '';
+  const sel = $('reportStudentSelect');
+  if(!classId){
+    sel.innerHTML = '<option value="">Selecione uma turma primeiro</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">Carregando alunos...</option>';
+  try{
+    const snap = await db.collection('students').where('classId','==',classId).orderBy('name').get();
+    if(snap.empty){
+      sel.innerHTML = '<option value="">Nenhum aluno nesta turma</option>';
+      return;
+    }
+    const opts = ['<option value="">Selecione o aluno</option>'];
+    snap.forEach(d=>{
+      const s = d.data() || {};
+      opts.push(`<option value="${d.id}">${safeText(s.name || 'Aluno')}</option>`);
+    });
+    sel.innerHTML = opts.join('');
+  }catch(err){
+    console.error('Erro ao carregar alunos do relatório', err);
+    sel.innerHTML = '<option value="">Erro ao carregar alunos</option>';
+  }
+}
+async function getMaterialsMap(ids){
+  const map = {};
+  const unique = Array.from(new Set((ids || []).filter(Boolean)));
+  await Promise.all(unique.map(async id=>{
+    try{
+      const d = await db.collection('materials').doc(id).get();
+      map[id] = d.exists ? ((d.data()||{}).name || id) : id;
+    }catch(e){ map[id] = id; }
+  }));
+  return map;
+}
+async function getStudentsMap(ids){
+  const map = {};
+  const unique = Array.from(new Set((ids || []).filter(Boolean)));
+  await Promise.all(unique.map(async id=>{
+    try{
+      const d = await db.collection('students').doc(id).get();
+      map[id] = d.exists ? ((d.data()||{}).name || id) : id;
+    }catch(e){ map[id] = id; }
+  }));
+  return map;
+}
+async function getClassNameById(classId){
+  if(!classId) return 'Todas as turmas';
+  try{
+    const d = await db.collection('classes').doc(classId).get();
+    return d.exists ? ((d.data()||{}).name || classId) : classId;
+  }catch(e){ return classId; }
+}
+async function generateWithdrawalsReportPDF(){
+  if(!db) return alert('Firestore não inicializado.');
+  const classId = $('reportClass') ? $('reportClass').value : '';
+  const start = dateInputToStart($('reportStartDate') ? $('reportStartDate').value : '');
+  const end = dateInputToEnd($('reportEndDate') ? $('reportEndDate').value : '');
+  const btn = $('btnWithdrawalsPdf');
+  if(btn){ btn.disabled = true; btn.textContent = 'Gerando...'; }
+  try{
+    let snap;
+    if(classId){
+      snap = await db.collection('withdrawals').where('classId','==',classId).limit(1000).get();
+    } else {
+      snap = await db.collection('withdrawals').limit(1000).get();
+    }
+    const rows = [];
+    snap.forEach(d=>{
+      const w = { id:d.id, ...(d.data()||{}) };
+      if(isWithinDates(w.timestamp, start, end)) rows.push(w);
+    });
+    rows.sort((a,b)=>{
+      const ta = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate().getTime() : 0;
+      const tb = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate().getTime() : 0;
+      return ta - tb;
+    });
+    const [matMap, studentMap, className] = await Promise.all([
+      getMaterialsMap(rows.map(r=>r.materialId)),
+      getStudentsMap(rows.map(r=>r.studentId)),
+      getClassNameById(classId)
+    ]);
+    const period = `${start ? start.toLocaleDateString('pt-BR') : 'início'} até ${end ? end.toLocaleDateString('pt-BR') : 'hoje'}`;
+    let body = `<h1>Relatório de Retiradas de Materiais</h1>
+      <div class="meta"><strong>Turma:</strong> ${safeText(className)}<br><strong>Período:</strong> ${safeText(period)}<br><strong>Gerado em:</strong> ${new Date().toLocaleString('pt-BR')}</div>`;
+    if(!rows.length){
+      body += '<p>Nenhuma retirada encontrada para os filtros selecionados.</p>';
+      openPrintDocument('Relatório de Retiradas', body);
+      return;
+    }
+    let currentDate = '';
+    rows.forEach((w, idx)=>{
+      const dateLabel = formatDateBR(w.timestamp);
+      if(dateLabel !== currentDate){
+        if(idx > 0) body += '</tbody></table>';
+        currentDate = dateLabel;
+        body += `<h2>${safeText(dateLabel)}</h2><table><thead><tr>
+          <th style="width:13%">Horário</th><th style="width:18%">Retirado por</th><th style="width:24%">Material</th><th style="width:8%">Qtd.</th><th style="width:22%">Responsável/Autorização</th><th style="width:15%">Conferente</th>
+        </tr></thead><tbody>`;
+      }
+      const when = w.timestamp && w.timestamp.toDate ? w.timestamp.toDate() : null;
+      const hour = when ? when.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : '';
+      let who = '';
+      let resp = '';
+      if(w.withdrawType === 'teacher'){
+        who = `Professor(a): ${w.teacherName || '—'}`;
+        resp = `Resp. turma: ${w.responsibleTeacherName || '—'}${w.teacherNote ? '<br>Finalidade: '+safeText(w.teacherNote) : ''}${w.observation ? '<br>Obs.: '+safeText(w.observation) : ''}`;
+      } else if(w.withdrawType === 'student_class'){
+        who = `Aluno: ${w.studentName || studentMap[w.studentId] || '—'}<br><span class="muted">saldo da turma</span>`;
+        resp = `Autorizou: ${w.teacherRequesterName || '—'}${w.observation ? '<br>Obs.: '+safeText(w.observation) : ''}`;
+      } else {
+        who = `Aluno: ${w.studentName || studentMap[w.studentId] || '—'}<br><span class="muted">saldo próprio</span>`;
+        resp = `Autorizou: ${w.teacherRequesterName || '—'}${w.observation ? '<br>Obs.: '+safeText(w.observation) : ''}`;
+      }
+      body += `<tr><td>${safeText(hour)}</td><td>${who}</td><td>${safeText(matMap[w.materialId] || w.materialId || '')}</td><td class="center"><strong>${fmtNum(w.qtyApproved)}</strong></td><td>${resp}</td><td>${safeText(w.clerkName || '—')}</td></tr>`;
+    });
+    body += '</tbody></table>';
+    openPrintDocument('Relatório de Retiradas', body);
+  }catch(err){
+    console.error('Erro ao gerar PDF de retiradas', err);
+    alert('Erro ao gerar PDF de retiradas: ' + (err.message || err));
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = 'Abrir PDF de retiradas'; }
+  }
+}
+async function generateStudentBalanceDocument(){
+  if(!db) return alert('Firestore não inicializado.');
+  const studentId = $('reportStudentSelect') ? $('reportStudentSelect').value : '';
+  if(!studentId) return alert('Selecione um aluno.');
+  const btn = $('btnStudentBalancePdf');
+  if(btn){ btn.disabled = true; btn.textContent = 'Gerando...'; }
+  try{
+    const sdoc = await db.collection('students').doc(studentId).get();
+    if(!sdoc.exists) return alert('Aluno não encontrado.');
+    const s = sdoc.data() || {};
+    const className = await getClassNameById(s.classId);
+
+    const matsnap = await db.collection('materials').where('classId','==',s.classId).get();
+    const materials = [];
+    matsnap.forEach(d=> materials.push({ id:d.id, ...(d.data()||{}) }));
+    materials.sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''),'pt-BR',{sensitivity:'base'}));
+
+    const [stockSnap, ownWithdrawSnap, allWithdrawSnap] = await Promise.all([
+      db.collection('student_stock').where('studentId','==',studentId).get(),
+      db.collection('student_withdraw_agg').where('studentId','==',studentId).get(),
+      db.collection('withdrawals').where('studentId','==',studentId).limit(500).get()
+    ]);
+    const broughtMap = {};
+    stockSnap.forEach(d=>{ const x=d.data()||{}; broughtMap[x.materialId] = fmtNum(x.qtyBrought); });
+    const ownWithdrawMap = {};
+    ownWithdrawSnap.forEach(d=>{ const x=d.data()||{}; ownWithdrawMap[x.materialId] = fmtNum(x.qtyWithdrawn); });
+
+    // Fallback: se student_stock ainda não existir, soma deliveries antigas do aluno.
+    const delSnap = await db.collection('deliveries').where('studentId','==',studentId).get();
+    delSnap.forEach(d=>{
+      const x = d.data() || {};
+      if(!broughtMap[x.materialId]) broughtMap[x.materialId] = 0;
+      // Só usa fallback quando o agregado está zerado/ausente.
+      if(!stockSnap.docs.some(doc => (doc.data()||{}).materialId === x.materialId)){
+        broughtMap[x.materialId] += fmtNum(x.quantityDelivered);
+      }
+    });
+
+    const history = [];
+    allWithdrawSnap.forEach(d=> history.push({ id:d.id, ...(d.data()||{}) }));
+    history.sort((a,b)=>{
+      const ta = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate().getTime() : 0;
+      const tb = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate().getTime() : 0;
+      return tb - ta;
+    });
+    const classWithdrawMap = {};
+    history.forEach(w=>{
+      if(w.withdrawType === 'student_class') classWithdrawMap[w.materialId] = (classWithdrawMap[w.materialId] || 0) + fmtNum(w.qtyApproved);
+    });
+
+    let body = `<h1>Documento Individual de Materiais do Aluno</h1>
+      <div class="meta"><strong>Aluno:</strong> ${safeText(s.name || '')}<br><strong>Matrícula/Nº:</strong> ${safeText(s.studentId || 'N/A')}<br><strong>Turma:</strong> ${safeText(className)}<br><strong>Gerado em:</strong> ${new Date().toLocaleString('pt-BR')}</div>
+      <h2>Saldo do aluno</h2>
+      <table><thead><tr><th>Material</th><th class="center">Trouxe</th><th class="center">Já pegou do próprio saldo</th><th class="center">Saldo atual</th><th class="center">Pegou da turma</th></tr></thead><tbody>`;
+    if(!materials.length){
+      body += '<tr><td colspan="5">Nenhum material cadastrado para a turma.</td></tr>';
+    } else {
+      materials.forEach(m=>{
+        const brought = fmtNum(broughtMap[m.id]);
+        const ownW = fmtNum(ownWithdrawMap[m.id]);
+        const balance = brought - ownW;
+        const classW = fmtNum(classWithdrawMap[m.id]);
+        const balClass = balance > 0 ? 'ok' : (brought > 0 ? 'bad' : 'muted');
+        body += `<tr><td>${safeText(m.name || '')}</td><td class="center">${brought}</td><td class="center">${ownW}</td><td class="center ${balClass}">${balance}</td><td class="center">${classW}</td></tr>`;
+      });
+    }
+    body += '</tbody></table>';
+
+    body += '<h2>Histórico de retiradas deste aluno</h2>';
+    if(!history.length){
+      body += '<p>Nenhuma retirada registrada para este aluno.</p>';
+    } else {
+      const matMap = await getMaterialsMap(history.map(h=>h.materialId));
+      body += '<table><thead><tr><th>Data/Hora</th><th>Tipo</th><th>Material</th><th class="center">Qtd.</th><th>Autorizou</th><th>Observação</th><th>Conferente</th></tr></thead><tbody>';
+      history.forEach(w=>{
+        const tipo = w.withdrawType === 'student_class' ? 'Pegou do saldo da turma' : 'Pegou do próprio saldo';
+        body += `<tr><td>${safeText(formatDateTimeBR(w.timestamp))}</td><td>${safeText(tipo)}</td><td>${safeText(matMap[w.materialId] || w.materialId || '')}</td><td class="center"><strong>${fmtNum(w.qtyApproved)}</strong></td><td>${safeText(w.teacherRequesterName || '—')}</td><td>${safeText(w.observation || '—')}</td><td>${safeText(w.clerkName || '—')}</td></tr>`;
+      });
+      body += '</tbody></table>';
+    }
+    openPrintDocument('Documento do Aluno', body);
+  }catch(err){
+    console.error('Erro ao gerar documento do aluno', err);
+    alert('Erro ao gerar documento do aluno: ' + (err.message || err));
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = 'Abrir documento do aluno'; }
+  }
+}
+
+if($('reportClass')) $('reportClass').addEventListener('change', loadReportStudents);
+if($('btnWithdrawalsPdf')) $('btnWithdrawalsPdf').addEventListener('click', generateWithdrawalsReportPDF);
+if($('btnStudentBalancePdf')) $('btnStudentBalancePdf').addEventListener('click', generateStudentBalanceDocument);
 
 /* ---------------------------
    REPORTS (TAB)

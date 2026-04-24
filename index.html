@@ -512,8 +512,10 @@
 
 
         <div id="distribution" class="tab" style="display:none">
-          <h2 class="section-title">Distribuição de Material (Uso Coletivo)</h2>
-          <div class="small">Controle de retirada por aluno (limite do que trouxe) e por turma (saldo coletivo). Tudo fica registrado no histórico.</div>
+          <h2 class="section-title">Retirada de Materiais</h2>
+          <div class="small">Use esta tela para substituir o papel: o sistema desconta automaticamente do saldo do aluno ou do saldo coletivo da turma e registra data, horário, responsável e conferente.</div>
+          <div style="height:10px"></div>
+          <div class="hint small">Exemplo: se o aluno trouxe 5 bastões de cola quente e retirar 3, o saldo dele ficará 2. Ele não conseguirá retirar mais do que ainda possui registrado.</div>
           <div style="height:12px"></div>
 
           <div class="card" style="margin-bottom:16px;">
@@ -531,8 +533,9 @@
               <div style="flex:1; min-width: 220px;">
                 <div class="small">Tipo de retirada</div>
                 <select id="distWithdrawType" class="input">
-                  <option value="student">Aluno (mandado por professor)</option>
-                  <option value="teacher">Professor(a) retirando para a turma</option>
+                  <option value="student">Aluno retirando do próprio saldo</option>
+                  <option value="student_class">Aluno retirando material da turma</option>
+                  <option value="teacher">Professor(a) retirando para uso da turma</option>
                 </select>
               </div>
             </div>
@@ -540,11 +543,11 @@
             <div id="distStudentBlock" style="margin-top:12px;">
               <div class="row" style="gap:12px; flex-wrap: wrap;">
                 <div style="flex:1; min-width: 280px;">
-                  <div class="small">Aluno</div>
+                  <div class="small">Aluno que veio retirar</div>
                   <select id="distStudentSelect" class="input"><option value="">Escolha a turma primeiro</option></select>
                 </div>
                 <div style="flex:1; min-width: 280px;">
-                  <div class="small">Professor(a) que mandou</div>
+                  <div class="small">Professor(a) que autorizou/mandou</div>
                   <input id="distTeacherRequester" class="input" placeholder="Ex: Prof. Ana" />
                 </div>
               </div>
@@ -556,12 +559,20 @@
                   <div class="small">Professor(a) que retirou</div>
                   <input id="distTeacherName" class="input" placeholder="Ex: Prof. Carla" />
                 </div>
+                <div style="flex:1; min-width: 280px;">
+                  <div class="small">Professor(a) responsável pela turma</div>
+                  <input id="distClassResponsible" class="input" placeholder="Ex: Responsável pelo 1º ano" />
+                </div>
+                <div style="flex:1; min-width: 280px;">
+                  <div class="small">Observação / finalidade</div>
+                  <input id="distTeacherNote" class="input" placeholder="Ex: atividade em sala, cartaz, oficina..." />
+                </div>
               </div>
             </div>
 
             <div class="row" style="gap:12px; flex-wrap: wrap; margin-top:12px;">
               <div style="flex:1; min-width: 220px;">
-                <div class="small">Quantidade solicitada</div>
+                <div class="small">Quantidade retirada</div>
                 <input id="distQtyRequested" type="number" class="input" min="1" value="1" />
               </div>
               <div style="flex:2; min-width: 320px;">
@@ -569,8 +580,8 @@
                 <div id="distPreview" class="hint small">Selecione turma + material para ver o saldo.</div>
               </div>
               <div style="display:flex; gap:10px; align-items:flex-end;">
-                <button id="distBtnApprove" class="btn">Confirmar retirada</button>
-                <button id="distBtnSync" class="btn secondary">Sincronizar saldo da turma</button>
+                <button id="distBtnApprove" class="btn">Confirmar e descontar</button>
+                <button id="distBtnSync" class="btn secondary">Sincronizar saldo</button>
               </div>
             </div>
 
@@ -1353,7 +1364,7 @@ async function initDistributionTab(){
 
   function toggleBlocks(){
     const v = typeSel.value;
-    $('distStudentBlock').style.display = (v === 'student') ? '' : 'none';
+    $('distStudentBlock').style.display = (v === 'student' || v === 'student_class') ? '' : 'none';
     $('distTeacherBlock').style.display = (v === 'teacher') ? '' : 'none';
   }
 
@@ -1549,7 +1560,7 @@ async function distUpdatePreview(){
   const classId = $('distClassSelect').value;
   const materialId = $('distMaterialSelect').value;
   const type = $('distWithdrawType').value;
-  const studentId = (type === 'student') ? $('distStudentSelect').value : null;
+  const studentId = (type === 'student' || type === 'student_class') ? $('distStudentSelect').value : null;
   const qtyRequested = Math.max(0, parseInt($('distQtyRequested').value || '0', 10));
 
   if(!classId || !materialId){
@@ -1573,6 +1584,9 @@ async function distUpdatePreview(){
     balLines.push(`<div><strong>Turma</strong>: trouxe ${balances.class.brought} | retirado ${balances.class.withdrawn} | <strong>saldo ${classRem}</strong></div>`);
     if(type === 'student'){
       balLines.push(`<div><strong>Aluno</strong>: trouxe ${balances.student.brought} | retirado ${balances.student.withdrawn} | <strong>saldo ${studentRem}</strong></div>`);
+    }
+    if(type === 'student_class'){
+      balLines.push(`<div><strong>Aluno</strong>: apenas identifica quem pegou. O desconto será feito do saldo coletivo da turma.</div>`);
     }
 
     $('distBalances').innerHTML = balLines.join('');
@@ -1604,7 +1618,7 @@ async function distApproveClicked(){
   btn.textContent = 'Salvando...';
 
   try{
-    if(type === 'student'){
+    if(type === 'student' || type === 'student_class'){
       const studentId = $('distStudentSelect').value;
       const teacherRequesterName = $('distTeacherRequester').value.trim();
       if(!studentId) throw new Error('Selecione o aluno.');
@@ -1616,20 +1630,25 @@ async function distApproveClicked(){
         classId, studentId, studentName,
         materialId, qtyRequested,
         teacherRequesterName,
-        clerkName
+        clerkName,
+        mode: type
       });
 
       msg.style.color = 'var(--success)';
       msg.textContent = `Retirada registrada. Liberado: ${result.qtyApproved}.`;
     } else {
       const teacherName = $('distTeacherName').value.trim();
-      if(!teacherName) throw new Error('Informe o nome do professor(a).');
+      const responsibleTeacherName = $('distClassResponsible') ? $('distClassResponsible').value.trim() : '';
+      const teacherNote = $('distTeacherNote') ? $('distTeacherNote').value.trim() : '';
+      if(!teacherName) throw new Error('Informe o nome do professor(a) que retirou.');
 
       const result = await approveWithdrawalTeacherV2({
         classId,
         materialId,
         qtyRequested,
         teacherName,
+        responsibleTeacherName,
+        teacherNote,
         clerkName
       });
 
@@ -1645,7 +1664,7 @@ async function distApproveClicked(){
     msg.textContent = err.message || String(err);
   }finally{
     btn.disabled = false;
-    btn.textContent = 'Confirmar retirada';
+    btn.textContent = 'Confirmar e descontar';
   }
 }
 
@@ -1653,7 +1672,8 @@ async function approveWithdrawalStudentV2({
   classId, studentId, studentName,
   materialId, qtyRequested,
   teacherRequesterName,
-  clerkName
+  clerkName,
+  mode = 'student'
 }){
   const classStockRef = db.collection('class_stock').doc(stockDocId(classId, materialId));
   const studentStockRef = db.collection('student_stock').doc(stockDocId(studentId, materialId));
@@ -1673,8 +1693,14 @@ async function approveWithdrawalStudentV2({
     const classRemaining = fmtNum(classData.qtyTotalBrought) - fmtNum(classData.qtyTotalWithdrawn);
     const studentRemaining = fmtNum(studentStock.qtyBrought) - fmtNum(studentAgg.qtyWithdrawn);
 
-    const qtyApproved = Math.max(0, Math.min(qtyRequested, classRemaining, studentRemaining));
-    if(qtyApproved <= 0) throw new Error('Sem saldo para liberar (aluno ou turma).');
+    const qtyApproved = mode === 'student_class'
+      ? Math.max(0, Math.min(qtyRequested, classRemaining))
+      : Math.max(0, Math.min(qtyRequested, classRemaining, studentRemaining));
+
+    if(qtyApproved <= 0){
+      if(mode === 'student_class') throw new Error('Sem saldo da turma para liberar. Confira as entregas ou clique em Sincronizar saldo.');
+      throw new Error('Sem saldo no próprio aluno para esse material. Se ele veio pegar material coletivo da turma, selecione: Aluno retirando material da turma.');
+    }
 
     tx.set(classStockRef, {
       classId,
@@ -1684,13 +1710,15 @@ async function approveWithdrawalStudentV2({
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 
-    tx.set(studentAggRef, {
-      studentId,
-      classId,
-      materialId,
-      qtyWithdrawn: fmtNum(studentAgg.qtyWithdrawn) + qtyApproved,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+    if(mode !== 'student_class'){
+      tx.set(studentAggRef, {
+        studentId,
+        classId,
+        materialId,
+        qtyWithdrawn: fmtNum(studentAgg.qtyWithdrawn) + qtyApproved,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
 
     const wRef = db.collection('withdrawals').doc();
     tx.set(wRef, {
@@ -1698,7 +1726,7 @@ async function approveWithdrawalStudentV2({
       materialId,
       qtyRequested,
       qtyApproved,
-      withdrawType: 'student',
+      withdrawType: mode === 'student_class' ? 'student_class' : 'student',
       studentId,
       studentName,
       teacherRequesterName: teacherRequesterName || null,
@@ -1715,6 +1743,8 @@ async function approveWithdrawalTeacherV2({
   materialId,
   qtyRequested,
   teacherName,
+  responsibleTeacherName,
+  teacherNote,
   clerkName
 }){
   const classStockRef = db.collection('class_stock').doc(stockDocId(classId, materialId));
@@ -1743,6 +1773,8 @@ async function approveWithdrawalTeacherV2({
       qtyApproved,
       withdrawType: 'teacher',
       teacherName: teacherName || 'Professor(a)',
+      responsibleTeacherName: responsibleTeacherName || null,
+      teacherNote: teacherNote || null,
       clerkName: clerkName || 'Secretaria',
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -1811,12 +1843,13 @@ async function distLoadHistory(){
       const when = w.timestamp && w.timestamp.toDate ? w.timestamp.toDate() : null;
       const dt = when ? when.toLocaleString('pt-BR') : '';
       const matName = matMap[w.materialId] || w.materialId;
-      if(w.withdrawType === 'student'){
+      if(w.withdrawType === 'student' || w.withdrawType === 'student_class'){
         rows.push(`<div class="material-item" style="align-items:flex-start; gap:12px;">
           <div style="flex:1;">
             <strong>${w.studentName || 'Aluno'}</strong>
-            <div class="small">Material: ${matName} | Mandado por: ${w.teacherRequesterName || '—'}</div>
-            <div class="small">Solicitado: ${fmtNum(w.qtyRequested)} | Liberado: <strong>${fmtNum(w.qtyApproved)}</strong></div>
+            <div class="small">${w.withdrawType === 'student_class' ? 'Retirou do saldo coletivo da turma' : 'Retirou do próprio saldo'} | Material: ${matName}</div>
+            <div class="small">Autorizado por: ${w.teacherRequesterName || '—'} | Lançado por: ${w.clerkName || '—'}</div>
+            <div class="small">Quantidade retirada: <strong>${fmtNum(w.qtyApproved)}</strong> ${fmtNum(w.qtyRequested) !== fmtNum(w.qtyApproved) ? `(solicitado ${fmtNum(w.qtyRequested)})` : ''}</div>
           </div>
           <div class="small" style="min-width:160px; text-align:right;">${dt}</div>
         </div>`);
@@ -1824,8 +1857,9 @@ async function distLoadHistory(){
         rows.push(`<div class="material-item" style="align-items:flex-start; gap:12px;">
           <div style="flex:1;">
             <strong>${w.teacherName || 'Professor(a)'}</strong>
-            <div class="small">Material: ${matName}</div>
-            <div class="small">Solicitado: ${fmtNum(w.qtyRequested)} | Liberado: <strong>${fmtNum(w.qtyApproved)}</strong></div>
+            <div class="small">Material: ${matName} | Responsável da turma: ${w.responsibleTeacherName || '—'} | Lançado por: ${w.clerkName || '—'}</div>
+            <div class="small">Quantidade retirada: <strong>${fmtNum(w.qtyApproved)}</strong> ${fmtNum(w.qtyRequested) !== fmtNum(w.qtyApproved) ? `(solicitado ${fmtNum(w.qtyRequested)})` : ''}</div>
+            ${w.teacherNote ? `<div class="small">Obs.: ${w.teacherNote}</div>` : ''}
           </div>
           <div class="small" style="min-width:160px; text-align:right;">${dt}</div>
         </div>`);
@@ -1934,7 +1968,7 @@ async function distSyncClicked(){
     msg.textContent = 'Erro ao sincronizar: ' + (err.message || err);
   }finally{
     btn.disabled = false;
-    btn.textContent = 'Sincronizar saldo da turma';
+    btn.textContent = 'Sincronizar saldo';
   }
 }
 

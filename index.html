@@ -337,8 +337,10 @@
   #signature-canvas { height: 240px; }
 }
   </style>
+  <link href="assets/professional.css?v=20260714-5" rel="stylesheet">
 </head>
 <body>
+<div id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
 <header>
   <div class="left-controls" style="display:flex; align-items:center;">
@@ -385,7 +387,6 @@
         <div style="height:12px"></div>
         <div class="row">
           <button id="btnLogin" class="btn">Entrar</button>
-          <button id="btnSignup" class="btn secondary">Criar conta (teste)</button>
         </div>
         <div style="height:12px"></div>
         <div id="loginMsg" class="small" style="color:var(--danger)"></div>
@@ -645,10 +646,14 @@
           </div>
 
           <div class="card">
-            <div class="section-title" style="font-size:16px;">Relatório rápido de faltas</div>
-            <div class="small">Contagem total de itens que faltam por aluno na turma selecionada.</div>
+            <div class="section-title" style="font-size:16px;">Relatório completo de entregas</div>
+            <div class="small">Mostra todos os alunos da turma: quem entregou tudo, quem entregou parcialmente e quem ainda não entregou, com a lista do que falta.</div>
             <div style="height:12px"></div>
-            <button id="btnRunReport" class="btn" style="min-width: 120px;">Gerar relatório de faltas</button>
+            <div class="row" style="gap:10px;flex-wrap:wrap;">
+              <button id="btnRunReport" class="btn" style="min-width:180px;">Gerar relatório da turma</button>
+              <button id="btnAllClassesDeliveryPdf" class="btn secondary" style="min-width:220px;">PDF detalhado de todas as turmas</button>
+              <button id="btnAllClassesSimplePdf" class="btn secondary" style="min-width:220px;">PDF simples de todas as turmas</button>
+            </div>
           </div>
 
           <div id="reportArea" style="margin-top:20px" class="flex-col"></div>
@@ -656,22 +661,21 @@
 
         <div id="help" class="tab" style="display:none">
           <h2 class="section-title">Ajuda e Regras do Firebase</h2>
-          <div class="small">Se o console exibir "Missing or insufficient permissions", veja abaixo as regras mínimas para testes (apenas para ambiente de desenvolvimento).</div>
+          <div class="small">Orientações para manter os dados escolares protegidos no Firebase.</div>
           <div style="height:10px"></div>
-          <div class="hint small">Cole este snippet nas Regras do Firestore (Console Firebase → Firestore → Regras) para testes locais:</div>
+          <div class="hint small">As regras completas e atualizadas estão no arquivo <strong>firestore.rules</strong>. Publique esse arquivo no Console Firebase → Firestore Database → Regras.</div>
           <pre class="rules">
-// Regras de exemplo PARA DESENVOLVIMENTO (NÃO USAR EM PRODUÇÃO sem ajuste)
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.auth != null; // permite a usuários autenticados
-    }
-  }
-}
+PROTEÇÕES ATIVAS
+
+✓ Acesso somente para usuários autenticados
+✓ Validação de nomes, anos, quantidades e vínculos
+✓ Retiradas confirmadas não podem ser alteradas
+✓ Auditoria não pode ser editada nem apagada
+✓ Exclusões reservadas a contas com admin: true
+✓ Coleções desconhecidas são bloqueadas automaticamente
           </pre>
           <div style="height:8px"></div>
-          <div class="small">Se você quiser acesso público apenas para leitura (temporário), substitua a linha por: <code>if true</code> — mas isso torna seus dados públicos.</div>
+          <div class="small"><strong>Nunca use <code>if true</code> em produção.</strong> Depois de publicar, teste login, cadastro, entrega, retirada, rematrícula e relatórios com uma conta comum e uma conta administradora.</div>
         </div>
 
       </div>
@@ -691,6 +695,7 @@ service cloud.firestore {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <script>
 /* ============================
@@ -723,6 +728,7 @@ function setLibStatus(msg,isError){
   if(typeof firebase === 'undefined') missing.push('Firebase');
   if(typeof QRCode === 'undefined') missing.push('QRCode');
   if(typeof SignaturePad === 'undefined') missing.push('SignaturePad');
+  if(typeof pdfjsLib === 'undefined') missing.push('Leitor de PDF');
   
   if(missing.length){
     setLibStatus('Atenção: bibliotecas faltando: ' + missing.join(', ') + '. Verifique conexão com CDNs.', true);
@@ -749,6 +755,33 @@ try {
    Util / UI helpers
    --------------------------- */
 function $(id){ return document.getElementById(id); }
+
+const LEGACY_SCHOOL_YEAR = 2026;
+let ACTIVE_SCHOOL_YEAR = Number(localStorage.getItem('activeSchoolYear')) || LEGACY_SCHOOL_YEAR;
+function recordSchoolYear(data) {
+  return Number(data && data.schoolYear) || LEGACY_SCHOOL_YEAR;
+}
+function isActiveSchoolYear(data) {
+  return recordSchoolYear(data) === Number(ACTIVE_SCHOOL_YEAR);
+}
+
+async function logAudit(action, entityType, entityId, details = {}) {
+  if(!db || !auth || !auth.currentUser) return;
+  try {
+    await db.collection('audit_logs').add({
+      action,
+      entityType,
+      entityId: entityId || null,
+      details,
+      userId: auth.currentUser.uid,
+      userEmail: auth.currentUser.email || null,
+      clerkName: getCurrentClerkName(),
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(error) {
+    console.warn('Não foi possível registrar auditoria:', error);
+  }
+}
 
 /* Lógica do Menu Hambúrguer */
 const sidebar = $('sidebar');
@@ -978,7 +1011,7 @@ if(auth){
         }
     });
 
-    $('btnSignup').addEventListener('click', async function(){
+    $('btnSignup')?.addEventListener('click', async function(){
         const e = $('loginEmail').value.trim();
         const p = $('loginPass').value;
         const n = $('conferenteName').value.trim();
@@ -1024,19 +1057,19 @@ async function loadDashboardData(){
             db.collection('materials').get()
         ]);
 
-        $('countClasses').textContent = classesSnap.size;
-        $('countStudents').textContent = studentsSnap.size;
-        $('countMaterials').textContent = materialsSnap.size;
-        
         // --- Status por Segmento ---
         const classStats = {}; // { classId: { name, segment, totalStudents, deliveredCount } }
         classesSnap.forEach(d => {
             const data = d.data();
+            if(!isActiveSchoolYear(data)) return;
             classStats[d.id] = { name: data.name, segment: data.segment, totalStudents: 0, deliveredCount: 0 };
         });
 
+        let activeStudentCount = 0;
         studentsSnap.forEach(d => {
             const s = d.data();
+            if(!isActiveSchoolYear(s)) return;
+            activeStudentCount++;
             if (s.classId && classStats[s.classId]) {
                 classStats[s.classId].totalStudents++;
                 // Verifica se o aluno tem pelo menos uma assinatura para contar como 'Entregue'
@@ -1045,6 +1078,15 @@ async function loadDashboardData(){
                 }
             }
         });
+
+        let activeMaterialCount = 0;
+        materialsSnap.forEach(d => {
+          const material = d.data();
+          if(classStats[material.classId]) activeMaterialCount++;
+        });
+        $('countClasses').textContent = Object.keys(classStats).length;
+        $('countStudents').textContent = activeStudentCount;
+        $('countMaterials').textContent = activeMaterialCount;
 
         // Agrupar por Segmento
         const segmentStats = {}; // { segment: { totalClasses, totalStudents, totalDelivered } }
@@ -1224,6 +1266,7 @@ if($('saveNewClass')) $('saveNewClass').addEventListener('click', async function
         await db.collection('classes').add({
             name,
             segment,
+            schoolYear: ACTIVE_SCHOOL_YEAR,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
         alert('Turma criada com sucesso!');
@@ -1285,6 +1328,7 @@ $('btnSaveMaterials').addEventListener('click', async function(){
                 name: m.name,
                 quantity: m.quantity,
                 classId: m.classId,
+                schoolYear: ACTIVE_SCHOOL_YEAR,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
         });
@@ -1316,6 +1360,7 @@ async function loadClassesSelects(){
         const optionsHtml = ['<option value="">Escolha a turma</option>'];
         snap.forEach(d => {
             const c = d.data();
+            if(!isActiveSchoolYear(c)) return;
             optionsHtml.push(`<option value="${d.id}">${c.name} (${SEGMENTS_MAP[c.segment] || 'Outros'})</option>`);
         });
 
@@ -1824,6 +1869,7 @@ async function approveWithdrawalStudentV2({
     const wRef = db.collection('withdrawals').doc();
     tx.set(wRef, {
       classId,
+      schoolYear: ACTIVE_SCHOOL_YEAR,
       materialId,
       qtyRequested,
       qtyApproved,
@@ -1871,6 +1917,7 @@ async function approveWithdrawalTeacherV2({
     const wRef = db.collection('withdrawals').doc();
     tx.set(wRef, {
       classId,
+      schoolYear: ACTIVE_SCHOOL_YEAR,
       materialId,
       qtyRequested,
       qtyApproved,
@@ -2162,6 +2209,7 @@ async function loadClassesList(){
 
         snap.forEach(d => {
             const c = d.data();
+            if(!isActiveSchoolYear(c)) return;
             const e = document.createElement('div');
             e.className = 'material-item'; // Reutilizando o estilo do item
             e.innerHTML = `
@@ -2352,6 +2400,8 @@ async function addStudent(){
         await db.collection('students').add({
             name,
             classId,
+            schoolYear: ACTIVE_SCHOOL_YEAR,
+            enrollmentStatus: 'active',
             studentId, // Matrícula ou número
             signatureDataURL: null, // Campo para assinatura
             signerName: null,       // Nome do responsável
@@ -2359,6 +2409,8 @@ async function addStudent(){
             signatureTimestamp: null,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
+
+        logAudit('create', 'student', null, { name, classId, studentId });
 
         $('studentName').value = '';
         $('studentIdInput').value = '';
@@ -2406,6 +2458,7 @@ async function loadStudentsList(filterClassId = null){
         list.innerHTML = '';
         snap.forEach(d => {
             const s = d.data();
+            if(!isActiveSchoolYear(s)) return;
             const studentId = d.id;
             const className = classesMap[s.classId] || 'Turma Desconhecida';
             const hasSignature = !!s.signatureDataURL;
@@ -2426,6 +2479,7 @@ async function loadStudentsList(filterClassId = null){
                 </div>
                 <div style="display:flex;gap:8px; align-items:center; min-width: 40%;">
                     <button class="btn secondary" style="padding: 6px 10px; font-size:14px;" onclick="openStudent('${studentId}')">Checklist</button>
+                    <button class="btn secondary" style="padding: 6px 10px; font-size:14px;" onclick="editStudent('${studentId}', '${s.name.replace(/'/g, "\\'")}', '${String(s.studentId || '').replace(/'/g, "\\'")}')">Editar</button>
                     <button class="btn" style="padding: 6px 10px; font-size:14px;" onclick="generatePrintableChecklist('${studentId}')">Imprimir Doc</button>
                     <button class="btn secondary" style="background:var(--danger);color:white; padding: 6px 10px; font-size:14px;" onclick="deleteStudent('${studentId}', '${s.name.replace(/'/g, "\\'")}')">Apagar</button>
                 </div>
@@ -2438,6 +2492,27 @@ async function loadStudentsList(filterClassId = null){
     }
 }
 
+async function editStudent(studentId, currentName, currentRegistration) {
+    const name = prompt('Nome do aluno:', currentName);
+    if(name === null) return;
+    const cleanName = name.trim();
+    if(!cleanName) return alert('Informe um nome válido.');
+    const registration = prompt('Matrícula / número:', currentRegistration || '');
+    if(registration === null) return;
+    try {
+      await db.collection('students').doc(studentId).update({
+        name: cleanName,
+        studentId: registration.trim(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      logAudit('update', 'student', studentId, { name: cleanName });
+      await loadStudentsList($('studentsFilterClass').value);
+      alert('Cadastro do aluno atualizado.');
+    } catch(error) {
+      alert('Erro ao atualizar aluno: ' + (error.message || error));
+    }
+}
+
 let classesMapCache = null;
 async function getClassesMap(){
     if(classesMapCache) return classesMapCache;
@@ -2447,7 +2522,7 @@ async function getClassesMap(){
         const snap = await db.collection('classes').get();
         const map = {};
         snap.forEach(d => {
-            map[d.id] = d.data().name;
+            if(isActiveSchoolYear(d.data())) map[d.id] = d.data().name;
         });
         classesMapCache = map;
         return map;
@@ -2470,6 +2545,7 @@ async function deleteStudent(studentId, studentName) {
 
         // Apagar Aluno
         await db.collection('students').doc(studentId).delete();
+        logAudit('delete', 'student', studentId, { name: studentName });
         
         loadStudentsList($('studentsFilterClass').value); // Recarrega lista
         loadDashboardData(); // Atualiza contadores
@@ -2523,6 +2599,7 @@ async function saveDelivery(studentId, materialId, requiredQty, newQty, inputEl,
                 studentId,
                 materialId,
                 classId: $('studentClassIdCache').value, // classId em cache no modal
+                schoolYear: ACTIVE_SCHOOL_YEAR,
                 quantityDelivered: qtyToSave,
                 requiredQuantity: requiredQty, // Guarda a quantidade requerida no momento
                 clerkName: clerkName,
@@ -3658,6 +3735,108 @@ if($('btnStudentBalancePdf')) $('btnStudentBalancePdf').addEventListener('click'
    REPORTS (TAB)
    --------------------------- */
 
+async function generateAllClassesDeliveryPDF(detailed = true){
+    if(!db) return alert('Firestore não inicializado.');
+    const btn = detailed ? $('btnAllClassesDeliveryPdf') : $('btnAllClassesSimplePdf');
+    if(btn){ btn.disabled = true; btn.textContent = 'Preparando PDF...'; }
+
+    try{
+        const [classesSnap, studentsSnap, materialsSnap, deliveriesSnap] = await Promise.all([
+            db.collection('classes').get(),
+            db.collection('students').get(),
+            db.collection('materials').get(),
+            db.collection('deliveries').get()
+        ]);
+
+        const classes = [];
+        classesSnap.forEach(d => classes.push({id:d.id, ...(d.data() || {})}));
+        classes.sort((a,b) => String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR'));
+
+        const studentsByClass = {};
+        studentsSnap.forEach(d => {
+            const student = {id:d.id, ...(d.data() || {})};
+            if(!studentsByClass[student.classId]) studentsByClass[student.classId] = [];
+            studentsByClass[student.classId].push(student);
+        });
+
+        const materialsByClass = {};
+        materialsSnap.forEach(d => {
+            const material = {id:d.id, ...(d.data() || {})};
+            if(!materialsByClass[material.classId]) materialsByClass[material.classId] = [];
+            materialsByClass[material.classId].push(material);
+        });
+
+        const deliveriesByStudent = {};
+        deliveriesSnap.forEach(d => {
+            const delivery = d.data() || {};
+            if(!deliveriesByStudent[delivery.studentId]) deliveriesByStudent[delivery.studentId] = {};
+            deliveriesByStudent[delivery.studentId][delivery.materialId] = Number(delivery.quantityDelivered) || 0;
+        });
+
+        let body = `<h1>${detailed ? 'Relatório detalhado de entrega de materiais' : 'Relatório simples de alunos que entregaram materiais'}</h1><div class="meta"><strong>Organização:</strong> por turma<br><strong>Gerado em:</strong> ${safeText(new Date().toLocaleString('pt-BR'))}${detailed ? '' : '<br><strong>Observação:</strong> este relatório mostra somente entregas completas ou parciais.'}</div>`;
+
+        classes.forEach((classItem, classIndex) => {
+            const students = (studentsByClass[classItem.id] || []).sort((a,b) => String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR'));
+            const materials = materialsByClass[classItem.id] || [];
+            const rows = students.map(student => {
+                const deliveredItems = [];
+                const missingItems = [];
+                let deliveredQuantity = 0;
+
+                materials.forEach(material => {
+                    const required = Number(material.quantity) || 1;
+                    const delivered = (deliveriesByStudent[student.id] && deliveriesByStudent[student.id][material.id]) || 0;
+                    if(delivered > 0){
+                        deliveredItems.push(`${material.name || 'Material'} (${delivered})`);
+                        deliveredQuantity += delivered;
+                    }
+                    const missing = Math.max(0, required - delivered);
+                    if(missing > 0) missingItems.push(`${material.name || 'Material'} (${missing})`);
+                });
+
+                const status = materials.length && missingItems.length === 0 ? 'Entregou tudo' : (deliveredQuantity > 0 ? 'Entrega parcial' : 'Não entregou');
+                return {student, deliveredItems, missingItems, status};
+            });
+
+            const visibleRows = detailed ? rows : rows.filter(r => r.status !== 'Não entregou');
+            const deliveredCount = rows.filter(r => r.status === 'Entregou tudo').length;
+            const partialCount = rows.filter(r => r.status === 'Entrega parcial').length;
+            const noneCount = rows.filter(r => r.status === 'Não entregou').length;
+            const summary = detailed
+                ? `Alunos: ${rows.length} | Entregaram tudo: ${deliveredCount} | Parcial: ${partialCount} | Não entregaram: ${noneCount}`
+                : `Alunos que entregaram: ${visibleRows.length} | Entregaram tudo: ${deliveredCount} | Parcial: ${partialCount}`;
+            body += `<section${classIndex ? ' class="page-break"' : ''}><h2>Turma: ${safeText(classItem.name || 'Sem nome')}</h2><div class="meta">${summary}</div>`;
+
+            if(!visibleRows.length){
+                body += `<p>${detailed ? 'Nenhum aluno cadastrado nesta turma.' : 'Nenhum aluno fez entrega nesta turma.'}</p></section>`;
+                return;
+            }
+
+            body += detailed
+                ? '<table><thead><tr><th>Aluno</th><th>Matrícula</th><th>Situação</th><th>Materiais entregues (quantidade)</th><th>Materiais que faltam (quantidade)</th></tr></thead><tbody>'
+                : '<table><thead><tr><th>Aluno</th><th>Matrícula</th><th>Situação da entrega</th></tr></thead><tbody>';
+            visibleRows.forEach(row => {
+                const statusClass = row.status === 'Entregou tudo' ? 'ok' : (row.status === 'Não entregou' ? 'bad' : '');
+                body += detailed
+                    ? `<tr><td><strong>${safeText(row.student.name || 'Aluno sem nome')}</strong></td><td>${safeText(row.student.studentId || 'N/A')}</td><td class="${statusClass}">${safeText(row.status)}</td><td>${row.deliveredItems.length ? safeText(row.deliveredItems.join(', ')) : '—'}</td><td>${row.missingItems.length ? safeText(row.missingItems.join(', ')) : '<span class="ok">Nada pendente</span>'}</td></tr>`
+                    : `<tr><td><strong>${safeText(row.student.name || 'Aluno sem nome')}</strong></td><td>${safeText(row.student.studentId || 'N/A')}</td><td class="${statusClass}">${safeText(row.status)}</td></tr>`;
+            });
+            body += '</tbody></table></section>';
+        });
+
+        if(!classes.length) body += '<p>Nenhuma turma cadastrada.</p>';
+        openPrintDocument(detailed ? 'Entregas detalhadas por turma' : 'Entregas por turma - simples', body);
+    }catch(err){
+        console.error('Erro no relatório de todas as turmas', err);
+        alert('Erro ao gerar o PDF por turma: ' + (err.message || err));
+    }finally{
+        if(btn){ btn.disabled = false; btn.textContent = detailed ? 'PDF detalhado de todas as turmas' : 'PDF simples de todas as turmas'; }
+    }
+}
+
+if($('btnAllClassesDeliveryPdf')) $('btnAllClassesDeliveryPdf').addEventListener('click', () => generateAllClassesDeliveryPDF(true));
+if($('btnAllClassesSimplePdf')) $('btnAllClassesSimplePdf').addEventListener('click', () => generateAllClassesDeliveryPDF(false));
+
 $('btnRunReport').addEventListener('click', async function(){
     if(!db) return alert('Firestore não inicializado.');
     
@@ -3677,90 +3856,106 @@ $('btnRunReport').addEventListener('click', async function(){
 
         const className = classDoc.exists ? classDoc.data().name : 'Turma Desconhecida';
 
-        // 1. Mapear materiais e suas quantidades requeridas
-        const requiredMaterials = {}; // { materialId: requiredQty }
-        matsnap.forEach(d => requiredMaterials[d.id] = d.data().quantity || 1);
+        const requiredMaterials = {};
+        matsnap.forEach(d => {
+            const material = d.data() || {};
+            requiredMaterials[d.id] = {
+                name: material.name || 'Material sem nome',
+                quantity: Number(material.quantity) || 1
+            };
+        });
         
         if (matsnap.empty) {
             $('reportArea').innerHTML = `<div class="small">Nenhum material cadastrado para a turma ${className}.</div>`;
             return;
         }
 
-        // 2. Mapear entregas por aluno
-        // { studentId: { materialId: deliveredQty } }
         const studentDeliveries = {};
         deliveriesSnap.forEach(d => {
             const data = d.data();
             if (!studentDeliveries[data.studentId]) studentDeliveries[data.studentId] = {};
-            studentDeliveries[data.studentId][data.materialId] = data.quantityDelivered || 0;
+            studentDeliveries[data.studentId][data.materialId] = Number(data.quantityDelivered) || 0;
         });
-        
-        // 3. Calcular faltas por aluno
+
         const reportData = [];
         studentsnap.forEach(d => {
             const s = d.data();
             let totalMissing = 0;
-            
-            // Itera sobre todos os materiais requeridos para a turma
+            let totalDelivered = 0;
+            let completedMaterials = 0;
+            const pending = [];
+
             Object.keys(requiredMaterials).forEach(matId => {
-                const required = requiredMaterials[matId];
+                const material = requiredMaterials[matId];
+                const required = material.quantity;
                 const delivered = (studentDeliveries[d.id] && studentDeliveries[d.id][matId]) || 0;
-                totalMissing += Math.max(0, required - delivered); // Não pode ser negativo
+                const missing = Math.max(0, required - delivered);
+                totalDelivered += Math.min(required, delivered);
+                totalMissing += missing;
+                if (missing === 0) completedMaterials++;
+                else pending.push(`${material.name} (${missing})`);
             });
 
-            // Apenas alunos com alguma falta ou que ainda não assinaram
-            if (totalMissing > 0 || !s.signatureDataURL) {
-                 reportData.push({
-                    name: s.name,
-                    studentId: s.studentId || 'N/A',
-                    totalMissing: totalMissing,
-                    signed: !!s.signatureDataURL
-                });
-            }
+            const status = totalMissing === 0 ? 'Entregou tudo' : (totalDelivered > 0 ? 'Entrega parcial' : 'Não entregou');
+            reportData.push({
+                name: s.name || 'Aluno sem nome',
+                studentId: s.studentId || 'N/A',
+                totalMissing,
+                totalDelivered,
+                completedMaterials,
+                pending,
+                status,
+                signed: !!s.signatureDataURL
+            });
         });
 
-        // Ordenar: primeiro os alunos com mais faltas, depois por nome
-        reportData.sort((a, b) => b.totalMissing - a.totalMissing || a.name.localeCompare(b.name));
+        const statusOrder = {'Não entregou': 0, 'Entrega parcial': 1, 'Entregou tudo': 2};
+        reportData.sort((a, b) => statusOrder[a.status] - statusOrder[b.status] || a.name.localeCompare(b.name, 'pt-BR'));
 
-        // 4. Montar a Tabela
+        const totals = reportData.reduce((acc, item) => {
+            if(item.status === 'Entregou tudo') acc.complete++;
+            else if(item.status === 'Entrega parcial') acc.partial++;
+            else acc.none++;
+            return acc;
+        }, {complete:0, partial:0, none:0});
+
         let tableHtml = `
             <table style="width:100%; border-collapse: collapse; margin-top: 15px;">
                 <thead>
                     <tr style="background: var(--accent-light); color: var(--accent); font-size: 14px;">
                         <th style="padding: 10px; text-align: left; border: 1px solid #ccc;">Aluno</th>
                         <th style="padding: 10px; text-align: center; border: 1px solid #ccc; width: 120px;">Matrícula</th>
-                        <th style="padding: 10px; text-align: center; border: 1px solid #ccc; width: 100px;">Faltas (Total)</th>
-                        <th style="padding: 10px; text-align: center; border: 1px solid #ccc; width: 120px;">Assinatura</th>
+                        <th style="padding: 10px; text-align: center; border: 1px solid #ccc; width: 130px;">Situação</th>
+                        <th style="padding: 10px; text-align: center; border: 1px solid #ccc; width: 110px;">Itens completos</th>
+                        <th style="padding: 10px; text-align: left; border: 1px solid #ccc;">O que falta</th>
+                        <th style="padding: 10px; text-align: center; border: 1px solid #ccc; width: 90px;">Assinou</th>
                     </tr>
                 </thead>
                 <tbody>
         `;
 
         reportData.forEach(item => {
-            const missingColor = item.totalMissing > 0 ? 'var(--danger)' : 'var(--success)';
-            const signedStatus = item.signed ? 'Sim' : 'Não';
-            const signedColor = item.signed ? 'var(--success)' : 'var(--danger)';
+            const statusColor = item.status === 'Entregou tudo' ? 'var(--success)' : (item.status === 'Entrega parcial' ? '#b7791f' : 'var(--danger)');
 
             tableHtml += `
                 <tr style="font-size: 14px; border-bottom: 1px solid #eee;">
-                    <td style="padding: 10px; text-align: left;">${item.name}</td>
-                    <td style="padding: 10px; text-align: center;">${item.studentId}</td>
-                    <td style="padding: 10px; text-align: center; color: ${missingColor}; font-weight: 600;">${item.totalMissing}</td>
-                    <td style="padding: 10px; text-align: center; color: ${signedColor};">${signedStatus}</td>
+                    <td style="padding: 10px; text-align: left;">${safeText(item.name)}</td>
+                    <td style="padding: 10px; text-align: center;">${safeText(item.studentId)}</td>
+                    <td style="padding: 10px; text-align: center; color: ${statusColor}; font-weight: 700;">${item.status}</td>
+                    <td style="padding: 10px; text-align: center;">${item.completedMaterials} de ${Object.keys(requiredMaterials).length}</td>
+                    <td style="padding: 10px; text-align: left;">${item.pending.length ? safeText(item.pending.join(', ')) : '<span style="color:var(--success);font-weight:600;">Nada pendente</span>'}</td>
+                    <td style="padding: 10px; text-align: center;">${item.signed ? 'Sim' : 'Não'}</td>
                 </tr>
             `;
         });
         
         tableHtml += `</tbody></table>`;
 
-        // 5. Renderizar
-        $('btnRunReport').disabled = false;
-        $('btnRunReport').textContent = 'Gerar relatório';
-        
         const table = document.createElement('div');
         table.className = 'card';
         table.innerHTML = `
-            <h3 class="section-title" style="margin-top: 0;">Relatório de Faltas - ${className}</h3>
+            <h3 class="section-title" style="margin-top: 0;">Relatório completo de entregas - ${safeText(className)}</h3>
+            <div class="small" style="margin-bottom:10px;">Total: <strong>${reportData.length}</strong> alunos &nbsp;•&nbsp; Entregaram tudo: <strong style="color:var(--success)">${totals.complete}</strong> &nbsp;•&nbsp; Parcial: <strong style="color:#b7791f">${totals.partial}</strong> &nbsp;•&nbsp; Não entregaram: <strong style="color:var(--danger)">${totals.none}</strong></div>
             ${tableHtml}
         `;
 
@@ -3769,12 +3964,10 @@ $('btnRunReport').addEventListener('click', async function(){
         if (studentsnap.empty) {
             $('reportArea').innerHTML = '<div class="small">Nenhum aluno encontrado nesta turma para gerar o relatório.</div>';
         } else {
-            // Cria um contêiner para o botão e a tabela
             const contentWrapper = document.createElement('div');
-            
-            // Adiciona o botão de fechar no topo
             contentWrapper.innerHTML = `
-                <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed var(--border-color);">
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:15px;border-bottom:1px dashed var(--border-color);">
+                    <button id="btnPrintDeliveryReport" class="btn">Imprimir / Salvar PDF</button>
                     <button class="btn secondary" 
                             style="background-color: var(--muted); color: white;" 
                             onclick="document.getElementById('reportArea').innerHTML = ''">
@@ -3782,21 +3975,25 @@ $('btnRunReport').addEventListener('click', async function(){
                     </button>
                 </div>`;
 
-            // Anexa a tabela de relatório ao contêiner
             contentWrapper.appendChild(table);
-            
-            // Insere o contêiner completo na área do relatório
             $('reportArea').appendChild(contentWrapper);
+            $('btnPrintDeliveryReport').addEventListener('click', () => {
+                const summary = `<h1>Relatório completo de entregas</h1><div class="meta"><strong>Turma:</strong> ${safeText(className)}<br><strong>Gerado em:</strong> ${safeText(new Date().toLocaleString('pt-BR'))}<br><strong>Total:</strong> ${reportData.length} alunos | <strong>Entregaram tudo:</strong> ${totals.complete} | <strong>Parcial:</strong> ${totals.partial} | <strong>Não entregaram:</strong> ${totals.none}</div>`;
+                openPrintDocument(`Entregas - ${className}`, summary + tableHtml);
+            });
         }
         
     }catch(err){
         console.error('Erro Relatório',err);
         alert('Erro ao gerar relatório: ' + (err.message||err));
+    }finally{
         this.disabled = false;
-        this.textContent = 'Gerar relatório';
+        this.textContent = 'Gerar relatório da turma';
     }
 });
 
 /* --------------------------- END OF JS --------------------------- */
 </script>
+<script src="js/professional.js?v=20260714-5"></script>
+</body>
 </html>
